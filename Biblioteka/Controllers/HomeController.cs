@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteka.Controllers;
@@ -97,15 +98,29 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> Login(User user)
     {
-        var userFromDb = _context.Users
-            .FirstOrDefault(u => u.email == user.email && u.haslo == user.haslo);
+        // 1. Pobieramy użytkownika po emailu (bez hasła)
+        var userFromDb = await _context.Users
+            .FirstOrDefaultAsync(u => u.email == user.email);
 
         if (userFromDb == null)
         {
             ModelState.AddModelError(string.Empty, "Nieprawidłowy email lub hasło.");
-            return View(user);
+            return View("Login", user);
         }
 
+        // 2. WERYFIKACJA HASŁA
+        // Używamy standardowej, dwuargumentowej metody Verify.
+        // Jeśli ten kod powoduje błąd, spróbuj użyć userFromDb.haslo (bez !),
+        // ale najczęściej problem leży w resolvingu przeciążenia.
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.haslo, userFromDb.haslo);
+
+        if (!isPasswordValid)
+        {
+            ModelState.AddModelError(string.Empty, "Nieprawidłowy email lub hasło.");
+            return View("Login", user);
+        }
+
+        // 3. Utworzenie oświadczeń (Claims)
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, userFromDb.email!),
@@ -116,6 +131,7 @@ public class HomeController : Controller
         var claimsIdentity = new ClaimsIdentity(
             claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
+        // 4. Ustanowienie sesji
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity));
@@ -135,25 +151,51 @@ public class HomeController : Controller
     public async Task<IActionResult> UserPage()
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         if (!int.TryParse(userIdString, out int userId))
         {
+            TempData["Message"] = "Błąd: Nie można zidentyfikować użytkownika.";
             return RedirectToAction("Login", "Home");
         }
 
         var user = await _context.Users.FindAsync(userId);
-
-        // DODANE: Pobranie aktywnych wypożyczeń dla użytkownika
-        ViewBag.AktywneWypozyczenia = await _context.Wypozyczenia
-            .Where(w => w.UserId == userId && w.FaktycznaDataZwrotu == null)
-            .Include(w => w.Ksiazka)
-            .ToListAsync();
-
-        ViewBag.OkresyPrzedluzenia = new SelectList(new List<int> { 7, 14, 30 }); // Okresy przedłużenia
-
         if (user == null)
         {
-            return RedirectToAction("Logout");
+            TempData["Message"] = "Błąd: Nie znaleziono użytkownika.";
+            return RedirectToAction("Login", "Home");
         }
+
+        // POBIERANIE AKTYWNYCH WYPOŻYCZEŃ (Wypozyczenia z FaktycznaDataZwrotu == null)
+        var aktywneWypozyczenia = await _context.Wypozyczenia
+            .Where(w => w.UserId == userId && w.FaktycznaDataZwrotu == null)
+            .Include(w => w.Ksiazka)
+            .OrderByDescending(w => w.DataWypozyczenia)
+            .ToListAsync();
+        ViewBag.AktywneWypozyczenia = aktywneWypozyczenia;
+
+        // POBIERANIE AKTYWNYCH REZERWACJI (Rezerwacje z IsActive == true)
+        var aktywneRezerwacje = await _context.Rezerwacje
+            .Where(r => r.UserId == userId && r.IsActive)
+            .Include(r => r.Ksiazka)
+            .OrderBy(r => r.DataRezerwacji)
+            .ToListAsync();
+        ViewBag.AktywneRezerwacje = aktywneRezerwacje;
+
+        // NOWA LOGIKA: POBIERANIE HISTORII WYPOŻYCZEŃ (Wypozyczenia z FaktycznaDataZwrotu != null)
+        var historiaWypozyczen = await _context.Wypozyczenia
+            .Where(w => w.UserId == userId && w.FaktycznaDataZwrotu != null)
+            .Include(w => w.Ksiazka)
+            .OrderByDescending(w => w.FaktycznaDataZwrotu) // Najnowsze zwroty na górze
+            .ToListAsync();
+        ViewBag.HistoriaWypozyczen = historiaWypozyczen;
+
+        // Konfiguracja SelectList dla przedłużenia
+        var okresy = new List<int> { 7, 14, 30 };
+        ViewBag.OkresyPrzedluzenia = new SelectList(
+            okresy.Select(d => new { Value = d.ToString(), Text = $"{d} dni" }).ToList(),
+            "Value",
+            "Text"
+        );
 
         return View(user);
     }

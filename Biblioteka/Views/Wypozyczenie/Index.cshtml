@@ -1,54 +1,72 @@
 @model IEnumerable<Biblioteka.Models.Wypozyczenie>
 @{
     ViewData["Title"] = "Aktywne Wypożyczenia";
+    var currentSearch = ViewBag.CurrentSearch;
+    // ZMIENIONE: Zmienna do obsługi filtra została zmieniona, aby uniknąć konfliktu
+    var isOverdueFilterActive = ViewBag.IsOverdue; 
 }
 
 <h1>@ViewData["Title"]</h1>
 
 @if (TempData["Message"] != null)
 {
-    @* Poprawka CS8602: Użycie jawnego rzutowania i operatora null-forgiving (!) *@
     <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
 }
 
-@if (Model.Any())
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Książka</th>
-                <th>Wypożyczający</th>
-                <th>Data Wypożyczenia</th>
-                <th>Oczekiwany Zwrot</th>
-                <th>Przedłużono</th>
-                <th>Akcje</th>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form asp-action="Index" method="get">
+            <div class="input-group">
+                <input type="text" name="searchString" value="@currentSearch" class="form-control" placeholder="Szukaj po tytule/nazwisku..." />
+                
+                <div class="input-group-text">
+                    @* Używamy nowej zmiennej isOverdueFilterActive *@
+                    <input type="checkbox" name="overdue" value="true" @(isOverdueFilterActive == true ? "checked" : "") class="form-check-input mt-0 me-1" />
+                    Przeterminowane
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Filtruj</button>
+                @if (!string.IsNullOrEmpty(currentSearch) || isOverdueFilterActive == true)
+                {
+                    <a asp-action="Index" class="btn btn-warning">Reset</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Książka</th>
+            <th>Wypożyczający</th>
+            <th>Data Wypożyczenia</th>
+            <th>Oczekiwany Zwrot</th>
+            <th>Przedłużono</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            @* ZMIENIONE: Zmienna isOverdue jest teraz poprawna w zakresie pętli *@
+            var isOverdue = item.OczekiwanaDataZwrotu < DateTime.Now; 
+            <tr class="@(isOverdue ? "table-danger" : "")">
+                <td>@item.Ksiazka?.tytul</td>
+                <td>@item.User?.Imie @item.User?.Nazwisko (@item.User?.email)</td>
+                <td>@item.DataWypozyczenia.ToShortDateString()</td>
+                <td>@item.OczekiwanaDataZwrotu.ToShortDateString() @(isOverdue ? "(PRZETERMINOWANA)" : "")</td>
+                <td>@(item.Przedluzono ? "Tak" : "Nie")</td>
+                <td>
+                    @* Formularz POST do akcji Return w WypozyczenieController *@
+                    <form asp-action="Return" method="post" asp-route-id="@item.Id" asp-controller="Wypozyczenie" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-success" 
+                                onclick="return confirm('Potwierdź zwrot książki: @item.Ksiazka?.tytul?');">
+                            Zarejestruj Zwrot
+                        </button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                var isOverdue = item.OczekiwanaDataZwrotu < DateTime.Now;
-                <tr class="@(isOverdue ? "table-danger" : "")">
-                    <td>@item.Ksiazka?.tytul</td>
-                    <td>@item.User?.Imie @item.User?.Nazwisko (@item.User?.email)</td>
-                    <td>@item.DataWypozyczenia.ToShortDateString()</td>
-                    <td>@item.OczekiwanaDataZwrotu.ToShortDateString() @(isOverdue ? "(PRZETERMINOWANA)" : "")</td>
-                    <td>@(item.Przedluzono ? "Tak" : "Nie")</td>
-                    <td>
-                        @* Formularz POST do akcji Return w WypozyczenieController *@
-                        <form asp-action="Return" method="post" asp-route-id="@item.Id" asp-controller="Wypozyczenie" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-success" 
-                                    onclick="return confirm('Potwierdź zwrot książki: @item.Ksiazka?.tytul?');">
-                                Zarejestruj Zwrot
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-success">Brak aktywnych wypożyczeń.</div>
-}
+        }
+    </tbody>
+</table>

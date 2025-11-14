@@ -47,6 +47,19 @@
                 <span asp-validation-for="tag" class="text-danger"></span>
             </div>
             
+            <div class="form-group mb-3">
+                <label asp-for="tag" class="control-label"></label>
+                <input asp-for="tag" class="form-control" />
+                <span asp-validation-for="tag" class="text-danger"></span>
+            </div>
+            
+            @* DODANE: Pole dla Spisu Treści *@
+            <div class="form-group mb-3">
+                <label asp-for="SpisTresci" class="control-label"></label>
+                <textarea asp-for="SpisTresci" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="SpisTresci" class="text-danger"></span>
+            </div>
+            
             @* Stan Dropdown *@
             <div class="form-group mb-3">
                 <label asp-for="stan" class="control-label">Stan</label>

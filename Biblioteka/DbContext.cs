@@ -16,6 +16,8 @@ public class BibliotekaContext : DbContext
     public DbSet<Kategoria> Kategorie { get; set; }
     public DbSet<Wypozyczenie> Wypozyczenia { get; set; }
     public DbSet<Rezerwacja> Rezerwacje { get; set; }
+    public DbSet<HistoriaWyszukiwan> HistoriaWyszukiwan { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

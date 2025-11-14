@@ -45,6 +45,16 @@
                 {
                     <a asp-action="Index" asp-route-kategoriaId="@selectedKategoriaId" class="btn btn-warning">Wyczyść Szukanie</a>
                 }
+
+                @* Views/Ksiazka/Index.cshtml - Fragment pod polem wyszukiwania *@
+                    @if (!string.IsNullOrEmpty(currentFilter))
+                    {
+                        <form asp-action="SaveSearch" method="post" class="d-inline ms-3">
+                            <input type="hidden" name="searchString" value="@currentFilter" />
+                            <input type="text" name="nazwaZapisu" placeholder="Nazwa zapisu (np. 'Historyczne książki')" required class="form-control form-control-sm d-inline w-auto" />
+                            <button type="submit" class="btn btn-sm btn-info">Zapisz Wyszukiwanie</button>
+                        </form>
+                    }
             </div>
         </form>
     </div>

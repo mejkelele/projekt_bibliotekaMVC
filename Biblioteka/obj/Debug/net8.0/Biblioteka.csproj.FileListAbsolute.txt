@@ -132,3 +132,4 @@ C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\Biblioteka
 C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\Biblioteka.genruntimeconfig.cache
 C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\ref\Biblioteka.dll
 C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\Biblioteka.sourcelink.json
+C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\bin\Debug\net8.0\BCrypt.Net-Next.dll

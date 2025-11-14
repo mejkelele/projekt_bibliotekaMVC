@@ -3,6 +3,7 @@ using System;
 using Biblioteka.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biblioteka.Migrations
 {
     [DbContext(typeof(BibliotekaContext))]
-    partial class BibliotekaContextModelSnapshot : ModelSnapshot
+    [Migration("20251114194429_update")]
+    partial class update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
@@ -140,12 +143,6 @@ namespace Biblioteka.Migrations
 
                     b.Property<string>("Imie")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Kara")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Nazwisko")

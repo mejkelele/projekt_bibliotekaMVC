@@ -22,21 +22,44 @@ namespace Biblioteka.Controllers
 
         // AKCJA 1: Wyświetla listę aktywnych rezerwacji (kolejka)
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? searchString, bool? readyForPickup) // DODANO parametry filtrowania
         {
-            // Pobieramy aktywne rezerwacje, sortując według daty (kto pierwszy, ten lepszy)
-            var aktywneRezerwacje = await _context.Rezerwacje
+            // 1. Budowanie zapytania bazowego
+            var rezerwacjeQuery = _context.Rezerwacje
                 .Where(r => r.IsActive)
                 .Include(r => r.User)
                 .Include(r => r.Ksiazka)
-                .OrderBy(r => r.KsiazkaId) // Grupowanie po książce
-                .ThenBy(r => r.DataRezerwacji) // Kolejność rezerwacji
+                .AsQueryable();
+
+            // 2. Filtrowanie po gotowości do odbioru
+            if (readyForPickup.HasValue && readyForPickup.Value)
+            {
+                rezerwacjeQuery = rezerwacjeQuery.Where(r => r.Ksiazka!.stan == "Gotowa do Odbioru");
+            }
+
+            // 3. Wyszukiwanie tekstowe
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                rezerwacjeQuery = rezerwacjeQuery.Where(r =>
+                    r.Ksiazka!.tytul.ToLower().Contains(searchString) ||
+                    r.User!.Nazwisko.ToLower().Contains(searchString));
+            }
+
+            // 4. Sortowanie (Gotowe do odbioru na górze)
+            var aktywneRezerwacje = await rezerwacjeQuery
+                .OrderByDescending(r => r.Ksiazka!.stan == "Gotowa do Odbioru")
+                .ThenBy(r => r.KsiazkaId)
+                .ThenBy(r => r.DataRezerwacji)
                 .ToListAsync();
+
+            ViewBag.CurrentSearch = searchString;
+            ViewBag.IsReady = readyForPickup;
 
             return View(aktywneRezerwacje);
         }
 
-        // AKCJA 2: Anulowanie rezerwacji przez personel (np. po wygaśnięciu)
+        // AKCJA 2: Anulowanie rezerwacji
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
@@ -58,7 +81,60 @@ namespace Biblioteka.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // AKCJA 3: Aktywacja rezerwacji (po zwrocie książki) - logikę przejął WypozyczenieController.Return.
-        // Tutaj moglibyśmy dodać logikę do wysłania powiadomienia, ale na razie to pominiemy.
+        // AKCJA 4: Finalizacja Odbioru (Wypożyczenie Zarezerwowanej Książki)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FinalizePickup(int id) // ID Rezerwacji
+        {
+            var rezerwacja = await _context.Rezerwacje
+                .Include(r => r.Ksiazka)
+                .Include(r => r.User)
+                .FirstOrDefaultAsync(r => r.Id == id && r.IsActive);
+
+            if (rezerwacja == null || rezerwacja.Ksiazka?.stan != "Gotowa do Odbioru")
+            {
+                TempData["Message"] = "Błąd: Rezerwacja jest nieaktywna lub książka nie jest gotowa do odbioru.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Tworzenie nowego rekordu wypożyczenia dla rezerwującego
+                var noweWypozyczenie = new Wypozyczenie
+                {
+                    UserId = rezerwacja.UserId,
+                    KsiazkaId = rezerwacja.KsiazkaId,
+                    DataWypozyczenia = DateTime.Now,
+                    OczekiwanaDataZwrotu = DateTime.Now.AddDays(14), // Standardowe 14 dni
+                    Przedluzono = false
+                };
+                _context.Wypozyczenia.Add(noweWypozyczenie);
+
+                // 2. Aktualizacja stanu Książki
+                rezerwacja.Ksiazka!.stan = "Wypożyczona";
+                _context.Ksiazki.Update(rezerwacja.Ksiazka);
+
+                // 3. Dezaktywacja rezerwacji (została zrealizowana)
+                rezerwacja.IsActive = false;
+                _context.Rezerwacje.Update(rezerwacja);
+
+                // 4. Aktualizacja licznika u Użytkownika
+                rezerwacja.User!.iloscWypKsiazek++;
+                _context.Users.Update(rezerwacja.User);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Message"] = $"Pomyślnie wypożyczono książkę '{rezerwacja.Ksiazka.tytul}' użytkownikowi {rezerwacja.User?.email}. Rezerwacja została zrealizowana.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                TempData["Message"] = "Wystąpił błąd podczas finalizacji odbioru.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }

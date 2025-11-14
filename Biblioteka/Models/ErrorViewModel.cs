@@ -21,6 +21,12 @@ public class User
     public int iloscWypKsiazek { get; set; } = 0;
 
     public string Rola { get; set; } = "user";
+    // DODANE: Pola do obsługi kar
+    [Display(Name = "Saldo Kar")]
+    public decimal Kara { get; set; } = 0.00M;
+
+    [Display(Name = "Blokada Wypożyczeń")]
+    public bool IsBlocked { get; set; } = false;
 
 }
 
@@ -37,6 +43,10 @@ public class Ksiazka
     public string tag { get; set; } = string.Empty;
 
     public string stan { get; set; } = string.Empty;
+
+    // NOWE POLE: Spis Treści (Używamy string?, ponieważ może być duży/opcjonalny)
+    [Display(Name = "Spis Treści")]
+    public string? SpisTresci { get; set; }
 
     [Display(Name = "Kategoria")]
     public int KategoriaId { get; set; }

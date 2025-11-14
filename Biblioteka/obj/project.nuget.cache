@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "61qy7DMG/ZCALUHvKcrmA02l8dKb7kifX3jNuog8xYvNFrLkuGINmh3tcS+iFIjXuYG73jKskkKagKASnMLFcA==",
+  "dgSpecHash": "atoyf8Pem/cVk626lHNNzlJNymvRN1gcHszVOCpAR3KO1PZmSr25NS4t5WzpkSXg2tcre4czv9Wcui95YhkteA==",
   "success": true,
   "projectFilePath": "C:\\Users\\mejke\\Desktop\\projekt_biblioteka\\Biblioteka\\Biblioteka.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\mejke\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\mejke\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\mejke\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
     "C:\\Users\\mejke\\.nuget\\packages\\microsoft.codeanalysis.analyzers\\3.3.3\\microsoft.codeanalysis.analyzers.3.3.3.nupkg.sha512",

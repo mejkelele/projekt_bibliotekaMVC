@@ -3,6 +3,7 @@ using System;
 using Biblioteka.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,39 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biblioteka.Migrations
 {
     [DbContext(typeof(BibliotekaContext))]
-    partial class BibliotekaContextModelSnapshot : ModelSnapshot
+    [Migration("20251114191015_spistresci")]
+    partial class spistresci
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
-
-            modelBuilder.Entity("Biblioteka.Models.HistoriaWyszukiwan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("DataZapisu")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Nazwa")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Zapytanie")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("HistoriaWyszukiwan");
-                });
 
             modelBuilder.Entity("Biblioteka.Models.Kategoria", b =>
                 {
@@ -142,12 +118,6 @@ namespace Biblioteka.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Kara")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Nazwisko")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -206,17 +176,6 @@ namespace Biblioteka.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Wypozyczenia");
-                });
-
-            modelBuilder.Entity("Biblioteka.Models.HistoriaWyszukiwan", b =>
-                {
-                    b.HasOne("Biblioteka.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Biblioteka.Models.Kategoria", b =>

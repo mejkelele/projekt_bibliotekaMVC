@@ -1,0 +1,49 @@
+@model Biblioteka.Models.UserRoleViewModel
+@{
+    ViewData["Title"] = "Edytuj Użytkownika";
+}
+
+<h1>Edytuj Rolę i Status Użytkownika</h1>
+
+<h4>@Model.User.Imie @Model.User.Nazwisko (@Model.User.email)</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <input type="hidden" asp-for="User.Id" />
+            
+            @* Pole do edycji roli *@
+            <div class="form-group mb-3">
+                <label asp-for="User.Rola" class="control-label">Rola Użytkownika</label>
+                <select asp-for="User.Rola" class="form-control" asp-items="Model.AvailableRoles">
+                </select>
+                <span asp-validation-for="User.Rola" class="text-danger"></span>
+            </div>
+            
+            @* DODANE: Pole edycji Kary *@
+            <div class="form-group mb-3">
+                <label asp-for="User.Kara" class="control-label">Saldo Kar (PLN)</label>
+                <input asp-for="User.Kara" class="form-control" type="number" step="0.01" />
+                <span asp-validation-for="User.Kara" class="text-danger"></span>
+            </div>
+
+            @* DODANE: Checkbox blokady *@
+            <div class="form-group form-check mb-3">
+                <input type="checkbox" asp-for="User.IsBlocked" class="form-check-input" />
+                <label class="form-check-label" asp-for="User.IsBlocked">Blokada Wypożyczeń (Użytkownik zablokowany)</label>
+            </div>
+            
+            <div class="form-group">
+                <input type="submit" value="Zapisz Zmiany" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

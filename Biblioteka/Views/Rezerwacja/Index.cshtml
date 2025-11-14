@@ -1,49 +1,107 @@
 @model IEnumerable<Biblioteka.Models.Rezerwacja>
 @{
     ViewData["Title"] = "Aktywne Rezerwacje";
+    var currentSearch = ViewBag.CurrentSearch;
+    var isReady = ViewBag.IsReady;
 }
 
 <h1>@ViewData["Title"]</h1>
 
 @if (TempData["Message"] != null)
 {
+    @* Wyświetlanie komunikatów po operacjach (np. po zwrocie książki) *@
     <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
 }
 
-@if (Model.Any())
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Książka</th>
-                <th>Wypożyczający</th>
-                <th>Data Rezerwacji</th>
-                <th>Kolejka</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Ksiazka?.tytul</td>
-                    <td>@item.User?.Imie @item.User?.Nazwisko (@item.User?.email)</td>
-                    <td>@item.DataRezerwacji.ToShortDateString()</td>
-                    <td>@item.Ksiazka?.tag @* Tutaj można by wyświetlić pozycję w kolejce, ale na razie używamy prostego sortowania *@</td>
-                    <td>
-                        <form asp-action="Cancel" method="post" asp-route-id="@item.Id" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger" 
-                                    onclick="return confirm('Czy na pewno chcesz anulować tę rezerwację?');">
-                                Anuluj Rezerwację
+@* FORMULARZ FILTROWANIA I WYSZUKIWANIA *@
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form asp-action="Index" method="get">
+            <div class="input-group">
+                <input type="text" name="searchString" value="@currentSearch" class="form-control" placeholder="Szukaj po tytule/nazwisku..." />
+                
+                <div class="input-group-text">
+                    <input type="checkbox" name="readyForPickup" value="true" @(isReady == true ? "checked" : "") class="form-check-input mt-0 me-1" />
+                    Gotowe do Odbioru
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Filtruj</button>
+                @if (!string.IsNullOrEmpty(currentSearch) || isReady == true)
+                {
+                    <a asp-action="Index" class="btn btn-warning">Reset</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Książka</th>
+            <th>Rezerwujący</th>
+            <th>Data Rezerwacji</th>
+            <th>Status</th>
+            <th>Termin Odbioru</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var isReadyForPickup = item.Ksiazka?.stan == "Gotowa do Odbioru";
+            var isExpired = isReadyForPickup && item.DataWygasniecia < DateTime.Now; 
+
+            @* Naprawiono błąd RZ1025: Teraz wiersz jest poprawnie otwarty i zamknięty *@
+            <tr class="@(isReadyForPickup ? "table-success" : "") @(isExpired ? "table-danger" : "")">
+                <td>@item.Ksiazka?.tytul</td>
+                <td>@item.User?.Imie @item.User?.Nazwisko (@item.User?.email)</td>
+                <td>@item.DataRezerwacji.ToShortDateString()</td>
+                <td>
+                    @if (isReadyForPickup)
+                    {
+                        <span class="badge bg-success">GOTOWA DO ODBIORU</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">W KOLEJCE</span>
+                    }
+                </td>
+                <td>
+                    @if (isReadyForPickup)
+                    {
+                        @(item.DataWygasniecia.ToShortDateString())
+                        @(isExpired ? "(WYGASŁA)" : "")
+                    }
+                    else
+                    {
+                        <span>---</span>
+                    }
+                </td>
+                <td>
+                    @if (isReadyForPickup && !isExpired) @* Finalizacja tylko jeśli jest gotowa i nie wygasła *@
+                    {
+                        <form asp-action="FinalizePickup" method="post" asp-route-id="@item.Id" class="d-inline me-2">
+                            <button type="submit" class="btn btn-sm btn-success" 
+                                    onclick="return confirm('Finalizuj odbiór dla @item.User?.email?');">
+                                Finalizuj Odbiór
                             </button>
                         </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-success">Brak aktywnych rezerwacji.</div>
-}
+                    }
+                    else if (isExpired) @* Wyświetlamy status wygasłej rezerwacji *@
+                    {
+                        <span class="text-danger fw-bold me-2">WYGASŁA</span>
+                    }
+
+                    @* Anulowanie jest zawsze możliwe *@
+                    <form asp-action="Cancel" method="post" asp-route-id="@item.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger" 
+                                onclick="return confirm('Czy na pewno anulować?');">
+                            Anuluj
+                        </button>
+                    </form>
+                </td>
+            </tr> @* <--- RZ1025 FIXED: Zamykający tag </tr> *@
+        } @* <--- RZ1006 FIXED: Zamykający nawias klamrowy foreach *@
+    </tbody>
+</table>

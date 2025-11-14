@@ -47,7 +47,7 @@ namespace Biblioteka.Controllers
         {
             List<Kategoria> kategorieWWidoku = new List<Kategoria>();
 
-            // WAŻNA KOREKTA LOGIKI: kategoriaId = 0 lub null oznacza reset/korzeń.
+            // 1. Logika ładowania hierarchii kategorii dla filtra
             if (!kategoriaId.HasValue || kategoriaId.Value <= 0)
             {
                 // Reset: Pokazujemy wszystkie główne kategorie (korzenie)
@@ -58,7 +58,6 @@ namespace Biblioteka.Controllers
             }
             else
             {
-                // 1. Zidentyfikuj wybraną kategorię
                 var wybranaKategoria = await _context.Kategorie.FindAsync(kategoriaId.Value);
 
                 if (wybranaKategoria != null)
@@ -68,7 +67,6 @@ namespace Biblioteka.Controllers
                     // a) Jeśli kategoria ma rodzica, pokaż rodzeństwo i rodzica (powrót)
                     if (parentId.HasValue)
                     {
-                        // Kategoria nadrzędna (powrót)
                         var parent = await _context.Kategorie.FindAsync(parentId.Value);
                         if (parent != null)
                         {
@@ -76,7 +74,6 @@ namespace Biblioteka.Controllers
                             kategorieWWidoku.Add(parent);
                         }
 
-                        // Siostrzane kategorie (rodzeństwo)
                         var rodzenstwo = await _context.Kategorie
                             .Where(k => k.ParentId == parentId.Value)
                             .OrderBy(k => k.Nazwa)
@@ -85,7 +82,7 @@ namespace Biblioteka.Controllers
                     }
                     else
                     {
-                        // b) To jest kategoria główna (korzeń). Pokaż wszystkie jej dzieci.
+                        // b) To jest kategoria główna. Pokaż wszystkie jej dzieci.
                         kategorieWWidoku = await _context.Kategorie
                             .Where(k => k.ParentId == kategoriaId.Value)
                             .OrderBy(k => k.Nazwa)
@@ -107,28 +104,49 @@ namespace Biblioteka.Controllers
                 .Include(k => k.Kategoria)
                 .AsQueryable();
 
-            // Kluczowa poprawka: filtrujemy tylko, gdy ID jest > 0. Dla null lub 0 (reset), filtrujemy wszystko.
+            // Filtrowanie po kategorii
             if (kategoriaId.HasValue && kategoriaId.Value > 0)
             {
                 ksiazkiQuery = ksiazkiQuery.Where(k => k.KategoriaId == kategoriaId.Value);
             }
 
-            // Wyszukiwanie tekstowe
+            // Wyszukiwanie tekstowe (AND, OR, NOT)
             if (!string.IsNullOrEmpty(searchString))
             {
-                searchString = searchString.ToLower();
+                var frazy = searchString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                // Przejście na Client Evaluation, ponieważ nie można tłumaczyć logiki OR/NOT na SQL w prosty sposób
+                var ksiazkiWynikowe = ksiazkiQuery.ToList().AsEnumerable();
 
-                ksiazkiQuery = ksiazkiQuery.Where(k =>
-                    k.tytul.ToLower().Contains(searchString) ||
-                    k.autor.ToLower().Contains(searchString) ||
-                    k.tag.ToLower().Contains(searchString) ||
-                    k.isbn.ToString().Contains(searchString)
-                );
+                foreach (var fraza in frazy)
+                {
+                    var cleanFraza = fraza.Trim().ToLower();
+
+                    if (cleanFraza.StartsWith("+")) // AND: musi zawierać
+                    {
+                        var term = cleanFraza.Substring(1);
+                        ksiazkiWynikowe = ksiazkiWynikowe.Where(k =>
+                            k.tytul.ToLower().Contains(term) || k.autor.ToLower().Contains(term) || k.tag.ToLower().Contains(term));
+                    }
+                    else if (cleanFraza.StartsWith("-")) // NOT: nie może zawierać
+                    {
+                        var term = cleanFraza.Substring(1);
+                        ksiazkiWynikowe = ksiazkiWynikowe.Where(k =>
+                            !(k.tytul.ToLower().Contains(term) || k.autor.ToLower().Contains(term) || k.tag.ToLower().Contains(term)));
+                    }
+                    else // Domyślnie AND (jeśli brak operatora)
+                    {
+                        ksiazkiWynikowe = ksiazkiWynikowe.Where(k =>
+                            k.tytul.ToLower().Contains(cleanFraza) || k.autor.ToLower().Contains(cleanFraza) || k.tag.ToLower().Contains(cleanFraza));
+                    }
+                }
+
+                var ksiazki = ksiazkiWynikowe.OrderBy(k => k.tytul).ToList();
+                return View(ksiazki);
             }
 
-            var ksiazki = await ksiazkiQuery.OrderBy(k => k.tytul).ToListAsync();
-
-            return View(ksiazki);
+            // Standardowe pobranie (jeśli brak wyszukiwania)
+            var ksiazkiFinal = await ksiazkiQuery.OrderBy(k => k.tytul).ToListAsync();
+            return View(ksiazkiFinal);
         }
 
         [HttpGet]
@@ -216,7 +234,7 @@ namespace Biblioteka.Controllers
             if (await TryUpdateModelAsync<Ksiazka>(
                 ksiazkaToUpdate,
                 "", // Prefiks klucza, pusty
-                k => k.tytul, k => k.autor, k => k.isbn, k => k.KategoriaId, k => k.tag, k => k.stan))
+                k => k.tytul, k => k.autor, k => k.isbn, k => k.KategoriaId, k => k.tag, k => k.stan, k => k.SpisTresci /* <--- DODANE NOWE POLE */))
             {
                 try
                 {
@@ -227,6 +245,7 @@ namespace Biblioteka.Controllers
                         return RedirectToAction(nameof(Index));
                     }
                 }
+                // ... (obsługa błędów)
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!_context.Ksiazki.Any(e => e.Id == ksiazkaToUpdate.Id))
@@ -407,6 +426,40 @@ namespace Biblioteka.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Message"] = $"Pomyślnie zarezerwowano '{ksiazka.tytul}'. Odbiór: do 3 dni po zwrocie.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // AKCJA 12: Zapisywanie wyszukiwania
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSearch(string? searchString, string nazwaZapisu)
+        {
+            if (string.IsNullOrEmpty(searchString) || string.IsNullOrEmpty(nazwaZapisu))
+            {
+                TempData["Message"] = "Wprowadź frazę wyszukiwania i nazwę, pod którą chcesz ją zapisać.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+            {
+                TempData["Message"] = "Błąd autoryzacji.";
+                return RedirectToAction("Login", "Home");
+            }
+
+            var nowyZapis = new HistoriaWyszukiwan
+            {
+                UserId = userId,
+                Nazwa = nazwaZapisu,
+                Zapytanie = searchString,
+                DataZapisu = DateTime.Now
+            };
+
+            _context.HistoriaWyszukiwan.Add(nowyZapis);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = $"Wyszukiwanie '{nazwaZapisu}' zostało zapisane w historii.";
             return RedirectToAction(nameof(Index));
         }
 
