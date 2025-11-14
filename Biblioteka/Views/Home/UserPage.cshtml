@@ -1,0 +1,87 @@
+@model Biblioteka.Models.User
+@{
+    ViewData["Title"] = "Strona Użytkownika";
+    // Zmienna pomocnicza do ułatwienia dostępu do listy z ViewBag (wyklucza CS0103)
+    var aktywneWypozyczenia = ViewBag.AktywneWypozyczenia as List<Biblioteka.Models.Wypozyczenie>;
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@((string)TempData["Message"]!)</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h2>Podstawowe Informacje</h2>
+        <dl class="row">
+            <dt class="col-sm-4">Imię:</dt>
+            <dd class="col-sm-8">@Model.Imie</dd>
+
+            <dt class="col-sm-4">Nazwisko:</dt>
+            <dd class="col-sm-8">@Model.Nazwisko</dd>
+
+            <dt class="col-sm-4">Email:</dt>
+            <dd class="col-sm-8">@Model.email</dd>
+
+            <dt class="col-sm-4">Rola:</dt>
+            <dd class="col-sm-8">@Model.Rola</dd>
+
+            <dt class="col-sm-4">Data Rejestracji:</dt>
+            <dd class="col-sm-8">@Model.dataRejestracji.ToShortDateString()</dd>
+
+            <dt class="col-sm-4">Ilość Wypożyczonych Książek:</dt>
+            <dd class="col-sm-8">@Model.iloscWypKsiazek</dd>
+        </dl>
+        
+        <div class="mt-4">
+            <form asp-controller="Home" asp-action="Logout" method="post">
+                <button type="submit" class="btn btn-danger btn-sm">Wyloguj się</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<h3 class="mt-4">Aktywne Wypożyczenia</h3>
+@if (aktywneWypozyczenia != null && aktywneWypozyczenia.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Książka</th>
+                <th>Oczekiwany Zwrot</th>
+                <th>Przedłużono</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var wypozyczenie in aktywneWypozyczenia)
+            {
+                var isOverdue = wypozyczenie.OczekiwanaDataZwrotu < DateTime.Now;
+                <tr class="@(isOverdue ? "table-danger" : "")">
+                    <td>@wypozyczenie.Ksiazka?.tytul</td>
+                    <td>@wypozyczenie.OczekiwanaDataZwrotu.ToShortDateString() @(isOverdue ? "(PRZETERMINOWANA)" : "")</td>
+                    <td>@(wypozyczenie.Przedluzono ? "Tak" : "Nie")</td>
+                    <td>
+                        @if (!wypozyczenie.Przedluzono) @* Przedłużenie tylko raz *@
+                        {
+                            <form asp-controller="Wypozyczenie" asp-action="Extend" method="post" class="d-inline">
+                                <input type="hidden" name="wypozyczenieId" value="@wypozyczenie.Id" />
+                                <select name="dni" class="form-select form-select-sm d-inline w-auto" asp-items="@ViewBag.OkresyPrzedluzenia"></select>
+                                <button type="submit" class="btn btn-sm btn-warning">
+                                    Przedłuż
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">Brak aktywnych wypożyczeń.</div>
+}

@@ -1,0 +1,53 @@
+﻿@model Biblioteka.Models.User
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+</div>
+
+<hr />
+
+@if (TempData["Message"] != null)
+{
+    @* Poprawka CS8602: Jawne rzutowanie z operatorem null-forgiving (!) *@
+    <div class="alert alert-success">@((string)TempData["Message"]!)</div>
+}
+
+<div class="d-grid gap-2 col-6 mx-auto mb-5">
+    <h3>Szybki dostęp</h3>
+    
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <a asp-controller="Home" asp-action="Login" class="btn btn-success btn-lg">Zaloguj się</a>
+    }
+
+    <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-info btn-lg">Przeglądaj Katalog Książek</a>
+</div>
+
+@if (!User.Identity.IsAuthenticated)
+{
+    <h2>Rejestracja użytkownika</h2>
+
+    <form asp-action="Register" method="post">
+        <div class="form-group">
+            <label>Imię</label>
+            <input asp-for="Imie" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Nazwisko</label>
+            <input asp-for="Nazwisko" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input asp-for="email" class="form-control" type="email" />
+        </div>
+        <div class="form-group">
+            <label>Hasło</label>
+            <input asp-for="haslo" class="form-control" type="password" />
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Zarejestruj</button>
+    </form>
+}

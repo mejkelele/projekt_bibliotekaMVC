@@ -1,0 +1,57 @@
+@model Biblioteka.Models.Ksiazka
+@{
+    ViewData["Title"] = "Dodaj Nową Książkę";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<h4>Ksiazka</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group">
+                <label asp-for="tytul" class="control-label"></label>
+                <input asp-for="tytul" class="form-control" />
+                <span asp-validation-for="tytul" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="autor" class="control-label"></label>
+                <input asp-for="autor" class="form-control" />
+                <span asp-validation-for="autor" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="isbn" class="control-label"></label>
+                <input asp-for="isbn" class="form-control" />
+                <span asp-validation-for="isbn" class="text-danger"></span>
+            </div>
+            
+            @* ZMIENIONE: Pole dzial usunięte i zastąpione przez pole wyboru Kategoria *@
+            <div class="form-group">
+                <label asp-for="KategoriaId" class="control-label"></label>
+                <select asp-for="KategoriaId" class="form-control" asp-items="ViewBag.KategoriaId"></select>
+                <span asp-validation-for="KategoriaId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="tag" class="control-label"></label>
+                <input asp-for="tag" class="form-control" />
+                <span asp-validation-for="tag" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mt-3">
+                <input type="submit" value="Dodaj" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index">Powrót do listy</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,124 @@
+@model IEnumerable<Biblioteka.Models.Ksiazka>
+@{
+    ViewData["Title"] = "Katalog Książek";
+    var selectedKategoriaId = ViewBag.SelectedKategoriaId; 
+    var currentFilter = ViewBag.CurrentFilter;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mb-3">
+    <div class="col-md-7">
+        @* JEDEN FORMULARZ DLA FILTROWANIA I WYSZUKIWANIA *@
+        <form asp-action="Index" method="get">
+            <input type="hidden" name="kategoriaId" value="@selectedKategoriaId" /> 
+
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="filterKategoriaId">Kategoria:</label>
+                <select name="kategoriaId" id="filterKategoriaId" class="form-control" 
+                        onchange="this.form.submit()"> 
+                    <option value="">Wszystkie Kategorie</option>
+                    @if (ViewBag.KategoriaId is SelectList kategoriaList) 
+                    {
+                        @foreach (var item in kategoriaList)
+                        {
+                            <option value="@item.Value" selected="@(item.Value == selectedKategoriaId?.ToString())">
+                                @item.Text
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" name="searchString" value="@currentFilter" class="form-control" placeholder="Szukaj (Tytuł, Autor, ISBN, Tag)..." />
+                <button type="submit" class="btn btn-primary">Szukaj</button>
+                @if (!string.IsNullOrEmpty(currentFilter))
+                {
+                    <a asp-action="Index" asp-route-kategoriaId="@selectedKategoriaId" class="btn btn-warning">Wyczyść Szukanie</a>
+                }
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-5 text-end">
+        @* Przycisk dodawania widoczny tylko dla ról 'worker' lub 'admin' *@
+        @if (User.IsInRole("worker") || User.IsInRole("admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">Dodaj Nową Książkę</a>
+        }
+        @* Link do koszyka (dla USERÓW) *@
+        @if (User.IsInRole("user"))
+        {
+             <a asp-action="ViewBasket" class="btn btn-success">Przejdź do Koszyka</a>
+        }
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success mt-3">@((string)TempData["Message"]!)</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.tytul)</th>
+            <th>@Html.DisplayNameFor(model => model.autor)</th>
+            <th>@Html.DisplayNameFor(model => model.isbn)</th>
+            <th>Kategoria</th>
+            <th>@Html.DisplayNameFor(model => model.tag)</th>
+            <th>@Html.DisplayNameFor(model => model.stan)</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.tytul)</td>
+                <td>@Html.DisplayFor(modelItem => item.autor)</td>
+                <td>@Html.DisplayFor(modelItem => item.isbn)</td>
+                @* Poprawka CS8072/CS1061: Używamy bezpośredniego wyświetlania @() z operatorem ?. *@
+                <td>@(item.Kategoria?.Nazwa)</td>
+                <td>@Html.DisplayFor(modelItem => item.tag)</td>
+                <td>@Html.DisplayFor(modelItem => item.stan)</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Szczegóły</a>
+                    
+                    @* Przycisk Dodaj do Koszyka (dla USERÓW) *@
+                    @if (User.IsInRole("user") && item.stan == "Dostępna")
+                    {
+                        <form asp-action="AddToBasket" method="post" asp-route-id="@item.Id" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                Dodaj do Koszyka
+                            </button>
+                        </form>
+                    }
+                    
+                    @* DODANE: Przycisk Rezerwuj (dla USERÓW, gdy Wypożyczona) *@
+                    @if (User.IsInRole("user") && item.stan == "Wypożyczona")
+                    {
+                        <form asp-action="Reserve" method="post" asp-route-id="@item.Id" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-info">
+                                Zarezerwuj
+                            </button>
+                        </form>
+                    }
+                    @* Edycja i Usuwanie (dla worker/admin) *@
+                    @if (User.IsInRole("worker") || User.IsInRole("admin"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Edytuj</a>
+                        
+                        <form asp-action="Delete" method="post" asp-route-id="@item.Id" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" 
+                                    onclick="return confirm('Czy na pewno chcesz usunąć tę książkę: @item.tytul?');">
+                                Usuń
+                            </button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

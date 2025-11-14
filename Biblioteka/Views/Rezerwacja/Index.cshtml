@@ -1,0 +1,49 @@
+@model IEnumerable<Biblioteka.Models.Rezerwacja>
+@{
+    ViewData["Title"] = "Aktywne Rezerwacje";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
+}
+
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Książka</th>
+                <th>Wypożyczający</th>
+                <th>Data Rezerwacji</th>
+                <th>Kolejka</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Ksiazka?.tytul</td>
+                    <td>@item.User?.Imie @item.User?.Nazwisko (@item.User?.email)</td>
+                    <td>@item.DataRezerwacji.ToShortDateString()</td>
+                    <td>@item.Ksiazka?.tag @* Tutaj można by wyświetlić pozycję w kolejce, ale na razie używamy prostego sortowania *@</td>
+                    <td>
+                        <form asp-action="Cancel" method="post" asp-route-id="@item.Id" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" 
+                                    onclick="return confirm('Czy na pewno chcesz anulować tę rezerwację?');">
+                                Anuluj Rezerwację
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-success">Brak aktywnych rezerwacji.</div>
+}

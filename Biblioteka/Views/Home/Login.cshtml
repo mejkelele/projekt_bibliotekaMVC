@@ -1,0 +1,43 @@
+@model Biblioteka.Models.User
+@{
+    ViewData["Title"] = "Logowanie do Biblioteki";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="email" class="control-label"></label>
+                <input asp-for="email" class="form-control" type="email" />
+                <span asp-validation-for="email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="haslo" class="control-label">Hasło</label>
+                <input asp-for="haslo" class="form-control" type="password" />
+                <span asp-validation-for="haslo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-primary">Zaloguj</button>
+            </div>
+            
+            @* Wyświetlanie błędów walidacji z serwera (np. "Nieprawidłowy email lub hasło") *@
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""]?.Errors.Any() == true)
+            {
+                <div class="alert alert-danger mt-3" role="alert">
+                    @ViewData.ModelState[""]?.Errors.First().ErrorMessage
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

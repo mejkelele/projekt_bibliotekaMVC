@@ -1,0 +1,64 @@
+@model IEnumerable<Biblioteka.Models.Ksiazka>
+@{
+    ViewData["Title"] = "Koszyk Wypożyczeń";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
+}
+
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.tytul)</th>
+                <th>@Html.DisplayNameFor(model => model.autor)</th>
+                <th>Kategoria</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.tytul)</td>
+                    <td>@Html.DisplayFor(modelItem => item.autor)</td>
+                    @* Poprawka CS8072/CS1061: Używamy bezpośredniego wyświetlania @() z operatorem ?. *@
+                    <td>@(item.Kategoria?.Nazwa)</td>
+                    <td>
+                        <form asp-action="RemoveFromBasket" method="post" asp-route-id="@item.Id" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger">Usuń z koszyka</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <hr />
+
+    <h4>Finalizacja Wypożyczenia</h4>
+    <form asp-controller="Wypozyczenie" asp-action="FinalizeWypozyczenie" method="post">
+        <div class="form-group row">
+            <label for="okresWypozyczenia" class="col-sm-4 col-form-label">Wybierz okres wypożyczenia:</label>
+            <div class="col-sm-3">
+                @* NAPRAWA CS1503: Użycie @ przed ViewBag.OkresyWypozyczenia *@
+                <select name="okresWypozyczenia" id="okresWypozyczenia" class="form-control" asp-items="@ViewBag.OkresyWypozyczenia"></select>
+            </div>
+            <div class="col-sm-5">
+                <button type="submit" class="btn btn-success">Wypożycz (@Model.Count() książek)</button>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-secondary">Kontynuuj Przeglądanie</a>
+        </div>
+    </form>
+}
+else
+{
+    <div class="alert alert-warning">Twój koszyk jest pusty. <a asp-controller="Ksiazka" asp-action="Index">Dodaj książki</a>, aby kontynuować.</div>
+}

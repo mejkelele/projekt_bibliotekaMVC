@@ -1,0 +1,74 @@
+@model Biblioteka.Models.KsiazkaDetailsViewModel
+@{
+    ViewData["Title"] = $"Szczegóły: {Model.Ksiazka.tytul}";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <h2>Informacje o Książce</h2>
+        <dl class="row">
+            <dt class="col-sm-4">Tytuł:</dt>
+            <dd class="col-sm-8">@Model.Ksiazka.tytul</dd>
+
+            <dt class="col-sm-4">Autor:</dt>
+            <dd class="col-sm-8">@Model.Ksiazka.autor</dd>
+
+            <dt class="col-sm-4">ISBN:</dt>
+            <dd class="col-sm-8">@Model.Ksiazka.isbn</dd>
+
+            <dt class="col-sm-4">Kategoria:</dt>
+            <dd class="col-sm-8">@(Model.Ksiazka.Kategoria?.Nazwa ?? "Brak")</dd>
+
+            <dt class="col-sm-4">Tagi:</dt>
+            <dd class="col-sm-8">@Model.Ksiazka.tag</dd>
+        </dl>
+
+        <h3 class="mt-4">Status</h3>
+        <p>
+            <span class="badge @(Model.Ksiazka.stan == "Dostępna" ? "bg-success" : Model.Ksiazka.stan == "Wypożyczona" ? "bg-warning text-dark" : "bg-info")">
+                @Model.Ksiazka.stan
+            </span>
+        </p>
+        
+        @* Przycisk powrotu do katalogu *@
+        <div class="mt-4">
+            <a asp-action="Index" class="btn btn-secondary">Powrót do Katalogu</a>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h3 class="mt-2">Aktywne Rezerwacje (@Model.AktywneRezerwacje.Count)</h3>
+        @if (Model.AktywneRezerwacje.Any())
+        {
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Rezerwujący</th>
+                        <th>Od</th>
+                        <th>Do Wygaśnięcia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.AktywneRezerwacje.Count; i++)
+                    {
+                        var rezerwacja = Model.AktywneRezerwacje[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td>@rezerwacja.User?.Imie @rezerwacja.User?.Nazwisko</td>
+                            <td>@rezerwacja.DataRezerwacji.ToShortDateString()</td>
+                            <td>@rezerwacja.DataWygasniecia.ToShortDateString()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-info mt-3">Brak aktywnych rezerwacji.</div>
+        }
+    </div>
+</div>
