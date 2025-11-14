@@ -10,10 +10,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System;
 
 namespace Biblioteka.Controllers
 {
-    // Akcje Edit/Details zostały pominięte w tym kroku, ale zostawiamy miejsce na ich rozszerzenie.
     public class KsiazkaController : Controller
     {
         private readonly BibliotekaContext _context;
@@ -29,7 +29,6 @@ namespace Biblioteka.Controllers
         private List<int> GetBasketItems()
         {
             var sessionData = HttpContext.Session.GetString(KoszykSessionKey);
-            // Używamy operatora ?? new List<int>() aby obsłużyć null, usuwając CS8603
             return sessionData == null
                 ? new List<int>()
                 : JsonSerializer.Deserialize<List<int>>(sessionData) ?? new List<int>();
@@ -46,23 +45,75 @@ namespace Biblioteka.Controllers
         [Authorize]
         public async Task<IActionResult> Index(int? kategoriaId, string? searchString)
         {
-            var kategorie = await _context.Kategorie
-                .OrderBy(k => k.Nazwa)
-                .ToListAsync();
+            List<Kategoria> kategorieWWidoku = new List<Kategoria>();
 
-            ViewBag.KategoriaId = new SelectList(kategorie, "Id", "Nazwa", kategoriaId);
+            // WAŻNA KOREKTA LOGIKI: kategoriaId = 0 lub null oznacza reset/korzeń.
+            if (!kategoriaId.HasValue || kategoriaId.Value <= 0)
+            {
+                // Reset: Pokazujemy wszystkie główne kategorie (korzenie)
+                kategorieWWidoku = await _context.Kategorie
+                    .Where(k => k.ParentId == null)
+                    .OrderBy(k => k.Nazwa)
+                    .ToListAsync();
+            }
+            else
+            {
+                // 1. Zidentyfikuj wybraną kategorię
+                var wybranaKategoria = await _context.Kategorie.FindAsync(kategoriaId.Value);
+
+                if (wybranaKategoria != null)
+                {
+                    var parentId = wybranaKategoria.ParentId;
+
+                    // a) Jeśli kategoria ma rodzica, pokaż rodzeństwo i rodzica (powrót)
+                    if (parentId.HasValue)
+                    {
+                        // Kategoria nadrzędna (powrót)
+                        var parent = await _context.Kategorie.FindAsync(parentId.Value);
+                        if (parent != null)
+                        {
+                            parent.Nazwa = $"^ Powrót do: {parent.Nazwa}";
+                            kategorieWWidoku.Add(parent);
+                        }
+
+                        // Siostrzane kategorie (rodzeństwo)
+                        var rodzenstwo = await _context.Kategorie
+                            .Where(k => k.ParentId == parentId.Value)
+                            .OrderBy(k => k.Nazwa)
+                            .ToListAsync();
+                        kategorieWWidoku.AddRange(rodzenstwo);
+                    }
+                    else
+                    {
+                        // b) To jest kategoria główna (korzeń). Pokaż wszystkie jej dzieci.
+                        kategorieWWidoku = await _context.Kategorie
+                            .Where(k => k.ParentId == kategoriaId.Value)
+                            .OrderBy(k => k.Nazwa)
+                            .ToListAsync();
+
+                        // Opcja powrotu do "Wszystkie Kategorie" (ID 0)
+                        kategorieWWidoku.Insert(0, new Kategoria { Id = 0, Nazwa = $"^ Powrót do: Wszystkie Kategorie", ParentId = null });
+                    }
+                }
+            }
+
+            // Przekazanie listy kategorii do widoku
+            ViewBag.KategoriaId = new SelectList(kategorieWWidoku, "Id", "Nazwa", kategoriaId);
             ViewBag.SelectedKategoriaId = kategoriaId;
             ViewBag.CurrentFilter = searchString;
 
+            // 2. LOGIKA FILTROWANIA KSIĄŻEK
             var ksiazkiQuery = _context.Ksiazki
                 .Include(k => k.Kategoria)
                 .AsQueryable();
 
+            // Kluczowa poprawka: filtrujemy tylko, gdy ID jest > 0. Dla null lub 0 (reset), filtrujemy wszystko.
             if (kategoriaId.HasValue && kategoriaId.Value > 0)
             {
                 ksiazkiQuery = ksiazkiQuery.Where(k => k.KategoriaId == kategoriaId.Value);
             }
 
+            // Wyszukiwanie tekstowe
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();
@@ -106,6 +157,7 @@ namespace Biblioteka.Controllers
             return View(ksiazka);
         }
 
+        // AKCJA USUWANIA (DELETE)
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "worker,admin")]
@@ -123,6 +175,110 @@ namespace Biblioteka.Controllers
             TempData["Message"] = $"Usunięto książkę: {ksiazka.tytul}";
             return RedirectToAction(nameof(Index));
         }
+
+        // GET: Ksiazka/Edit/5
+        [Authorize(Roles = "admin,worker")]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var ksiazka = await _context.Ksiazki.FindAsync(id);
+            if (ksiazka == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["KategoriaId"] = new SelectList(_context.Kategorie.OrderBy(k => k.Nazwa), "Id", "Nazwa", ksiazka.KategoriaId);
+            var stany = new List<string> { "Dostępna", "Wypożyczona", "Zarezerwowana", "Wycofana" };
+            ViewBag.StanList = new SelectList(stany, ksiazka.stan);
+
+            return View(ksiazka);
+        }
+
+        // POST: Ksiazka/Edit/5 - FINALNY I BEZPIECZNY FIX
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin,worker")]
+        public async Task<IActionResult> Edit(int id) // Usunięto parametr Ksiazka ksiazka
+        {
+            var ksiazkaToUpdate = await _context.Ksiazki.FindAsync(id);
+
+            if (ksiazkaToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            // 1. Użycie TryUpdateModelAsync: bezpiecznie mapuje dane z formularza 
+            // do śledzonego obiektu, używając białej listy pól.
+            if (await TryUpdateModelAsync<Ksiazka>(
+                ksiazkaToUpdate,
+                "", // Prefiks klucza, pusty
+                k => k.tytul, k => k.autor, k => k.isbn, k => k.KategoriaId, k => k.tag, k => k.stan))
+            {
+                try
+                {
+                    if (ModelState.IsValid)
+                    {
+                        await _context.SaveChangesAsync();
+                        TempData["Message"] = $"Książka '{ksiazkaToUpdate.tytul}' została pomyślnie zaktualizowana.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.Ksiazki.Any(e => e.Id == ksiazkaToUpdate.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            // Jeśli TryUpdateModelAsync lub ModelState.IsValid nie powiodło się, zwracamy widok z błędami
+            ViewData["KategoriaId"] = new SelectList(_context.Kategorie.OrderBy(k => k.Nazwa), "Id", "Nazwa", ksiazkaToUpdate.KategoriaId);
+            var stany = new List<string> { "Dostępna", "Wypożyczona", "Zarezerwowana", "Wycofana" };
+            ViewBag.StanList = new SelectList(stany, ksiazkaToUpdate.stan);
+
+            return View(ksiazkaToUpdate);
+        }
+
+        // AKCJA 11: Szczegóły Książki
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var ksiazka = await _context.Ksiazki
+                .Include(k => k.Kategoria)
+                .Select(k => new KsiazkaDetailsViewModel
+                {
+                    Ksiazka = k,
+                    AktywneRezerwacje = _context.Rezerwacje
+                        .Where(r => r.KsiazkaId == k.Id && r.IsActive)
+                        .Include(r => r.User)
+                        .OrderBy(r => r.DataRezerwacji)
+                        .ToList()
+                })
+                .FirstOrDefaultAsync(vm => vm.Ksiazka.Id == id);
+
+            if (ksiazka == null)
+            {
+                return NotFound();
+            }
+
+            return View(ksiazka);
+        }
+
 
         // AKCJE KOSZYKA
         [HttpPost]
@@ -167,7 +323,6 @@ namespace Biblioteka.Controllers
 
             var okresy = new List<int> { 7, 14, 30 };
 
-            // NAPRAWA CS1503: Użycie anonimowego obiektu z polami Value i Text
             ViewBag.OkresyWypozyczenia = new SelectList(
                 okresy.Select(d => new { Value = d, Text = $"{d} dni" }).ToList(),
                 "Value",
@@ -200,6 +355,7 @@ namespace Biblioteka.Controllers
         {
             return RedirectToAction("FinalizeWypozyczenie", "Wypozyczenie", new { okresWypozyczenia });
         }
+
         // AKCJA 9: Rezerwacja książki
         [HttpPost]
         [Authorize(Roles = "user")]
@@ -252,39 +408,6 @@ namespace Biblioteka.Controllers
 
             TempData["Message"] = $"Pomyślnie zarezerwowano '{ksiazka.tytul}'. Odbiór: do 3 dni po zwrocie.";
             return RedirectToAction(nameof(Index));
-        }
-
-        // AKCJA 10: Szczegóły Książki
-        [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            // Pobieramy dane za pomocą Select, aby od razu utworzyć ViewModel
-            var ksiazka = await _context.Ksiazki
-                .Include(k => k.Kategoria)
-                .Select(k => new KsiazkaDetailsViewModel
-                {
-                    Ksiazka = k,
-                    // Pobieranie aktywnych rezerwacji dla danej książki
-                    AktywneRezerwacje = _context.Rezerwacje
-                        .Where(r => r.KsiazkaId == k.Id && r.IsActive)
-                        .Include(r => r.User)
-                        .OrderBy(r => r.DataRezerwacji)
-                        .ToList()
-                })
-                .FirstOrDefaultAsync(vm => vm.Ksiazka.Id == id);
-
-            if (ksiazka == null)
-            {
-                return NotFound();
-            }
-
-            return View(ksiazka);
         }
 
     }

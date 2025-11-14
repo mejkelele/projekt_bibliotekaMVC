@@ -1,0 +1,68 @@
+@model Biblioteka.Models.Ksiazka
+
+@{
+    ViewData["Title"] = "Edytuj Książkę";
+}
+
+<h1>Edytuj</h1>
+
+<h4>Książka: @Model.tytul</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            @* Ukryte pole dla ID jest niezbędne do poprawnej aktualizacji * @
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="form-group mb-3">
+                <label asp-for="tytul" class="control-label"></label>
+                <input asp-for="tytul" class="form-control" />
+                <span asp-validation-for="tytul" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="autor" class="control-label"></label>
+                <input asp-for="autor" class="form-control" />
+                <span asp-validation-for="autor" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="isbn" class="control-label"></label>
+                <input asp-for="isbn" class="form-control" />
+                <span asp-validation-for="isbn" class="text-danger"></span>
+            </div>
+            
+            @* Kategoria Dropdown *@
+            <div class="form-group mb-3">
+                <label asp-for="KategoriaId" class="control-label">Kategoria</label>
+                <select asp-for="KategoriaId" class="form-control" asp-items="ViewBag.KategoriaId">
+                    <option value="">-- Wybierz Kategorię --</option>
+                </select>
+                <span asp-validation-for="KategoriaId" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="tag" class="control-label"></label>
+                <input asp-for="tag" class="form-control" />
+                <span asp-validation-for="tag" class="text-danger"></span>
+            </div>
+            
+            @* Stan Dropdown *@
+            <div class="form-group mb-3">
+                <label asp-for="stan" class="control-label">Stan</label>
+                <select asp-for="stan" class="form-control" asp-items="ViewBag.StanList">
+                </select>
+                <span asp-validation-for="stan" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <input type="submit" value="Zapisz" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Anuluj i wróć do Listy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

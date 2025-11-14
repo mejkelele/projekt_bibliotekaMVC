@@ -131,3 +131,4 @@ C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\refint\Bib
 C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\Biblioteka.pdb
 C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\Biblioteka.genruntimeconfig.cache
 C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\ref\Biblioteka.dll
+C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\obj\Debug\net8.0\Biblioteka.sourcelink.json

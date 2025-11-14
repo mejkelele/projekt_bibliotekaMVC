@@ -1,0 +1,54 @@
+@model IEnumerable<Biblioteka.Models.Wypozyczenie>
+@{
+    ViewData["Title"] = "Aktywne Wypożyczenia";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["Message"] != null)
+{
+    @* Poprawka CS8602: Użycie jawnego rzutowania i operatora null-forgiving (!) *@
+    <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
+}
+
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Książka</th>
+                <th>Wypożyczający</th>
+                <th>Data Wypożyczenia</th>
+                <th>Oczekiwany Zwrot</th>
+                <th>Przedłużono</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var isOverdue = item.OczekiwanaDataZwrotu < DateTime.Now;
+                <tr class="@(isOverdue ? "table-danger" : "")">
+                    <td>@item.Ksiazka?.tytul</td>
+                    <td>@item.User?.Imie @item.User?.Nazwisko (@item.User?.email)</td>
+                    <td>@item.DataWypozyczenia.ToShortDateString()</td>
+                    <td>@item.OczekiwanaDataZwrotu.ToShortDateString() @(isOverdue ? "(PRZETERMINOWANA)" : "")</td>
+                    <td>@(item.Przedluzono ? "Tak" : "Nie")</td>
+                    <td>
+                        @* Formularz POST do akcji Return w WypozyczenieController *@
+                        <form asp-action="Return" method="post" asp-route-id="@item.Id" asp-controller="Wypozyczenie" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success" 
+                                    onclick="return confirm('Potwierdź zwrot książki: @item.Ksiazka?.tytul?');">
+                                Zarejestruj Zwrot
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-success">Brak aktywnych wypożyczeń.</div>
+}

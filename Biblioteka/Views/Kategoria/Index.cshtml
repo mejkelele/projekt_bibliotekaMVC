@@ -1,0 +1,46 @@
+@model IEnumerable<Biblioteka.Models.Kategoria>
+@{
+    ViewData["Title"] = "Zarządzanie Kategoriami";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    @* Przycisk do tworzenia nowej kategorii *@
+    <a asp-action="Create" class="btn btn-primary">Dodaj Nową Kategorię</a>
+</p>
+
+@if (TempData["Message"] != null)
+{
+    @* Wyświetlanie komunikatów po operacjach CRUD *@
+    <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nazwa Kategorii</th>
+            <th>Kategoria Nadrzędna</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @item.Nazwa
+                </td>
+                <td>
+                    @* Wyświetla nazwę rodzica, jeśli istnieje *@
+                    @(item.Parent != null ? item.Parent.Nazwa : "--- Kategoria Główna ---")
+                </td>
+                <td>
+                    @* Linki do operacji CRUD *@
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Edytuj</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Usuń</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

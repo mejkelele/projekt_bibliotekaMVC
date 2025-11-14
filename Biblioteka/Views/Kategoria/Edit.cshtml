@@ -1,0 +1,41 @@
+@model Biblioteka.Models.Kategoria
+@{
+    ViewData["Title"] = "Edytuj Kategorię";
+}
+
+<h1>Edytuj Kategorię</h1>
+
+<h4>@Model.Nazwa</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="form-group mb-3">
+                <label asp-for="Nazwa" class="control-label"></label>
+                <input asp-for="Nazwa" class="form-control" />
+                <span asp-validation-for="Nazwa" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="ParentId" class="control-label">Kategoria Nadrzędna</label>
+                <select asp-for="ParentId" class="form-control" asp-items="ViewBag.ParentId">
+                    <option value="">(Brak - Kategoria Główna)</option>
+                </select>
+                <span asp-validation-for="ParentId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Zapisz" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Anuluj i wróć do Listy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

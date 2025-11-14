@@ -1,0 +1,58 @@
+@model Biblioteka.Models.Kategoria
+@{
+    ViewData["Title"] = "Usuń Kategorię";
+}
+
+<h1>Usuń Kategorię</h1>
+
+@if (ViewBag.CanDelete)
+{
+    <h3 class="text-danger">Czy na pewno chcesz usunąć kategorię: @Model.Nazwa?</h3>
+}
+else
+{
+    <div class="alert alert-danger">
+        Nie można usunąć tej kategorii, ponieważ ma aktywne powiązania!
+        Powiązane elementy: 
+        @if (ViewBag.KsiazkiCount > 0)
+        {
+            <span>Liczba książek: @ViewBag.KsiazkiCount. </span>
+        }
+        @if (ViewBag.ChildrenCount > 0)
+        {
+            <span>Liczba podkategorii: @ViewBag.ChildrenCount.</span>
+        }
+    </div>
+}
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-4">
+            Nazwa
+        </dt>
+        <dd class = "col-sm-8">
+            @Html.DisplayFor(model => model.Nazwa)
+        </dd>
+        <dt class = "col-sm-4">
+            Kategoria Nadrzędna
+        </dt>
+        <dd class = "col-sm-8">
+            @(Model.Parent?.Nazwa ?? "--- Brak ---")
+        </dd>
+    </dl>
+    
+    @if (ViewBag.CanDelete)
+    {
+        @* Formularz POST wysyła ID do akcji DeleteConfirmed w kontrolerze *@
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="submit" value="Potwierdź Usunięcie" class="btn btn-danger" />
+            <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
+        </form>
+    }
+    else
+    {
+        <a asp-action="Index" class="btn btn-secondary">Powrót do Listy</a>
+    }
+</div>

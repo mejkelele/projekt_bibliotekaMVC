@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteka.Controllers;
 
@@ -23,30 +24,68 @@ public class HomeController : Controller
         _context = context;
     }
 
+    // ZMIENIONA: Akcja Index z poprawką na losowe sortowanie
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        // 1. Pobranie dostępnych książek do pamięci (ToList/AsEnumerable)
+        var dostepneKsiazkiQuery = _context.Ksiazki
+            .Where(k => k.stan == "Dostępna")
+            .Include(k => k.Kategoria);
+
+        // WAŻNA POPRAWKA: Przeniesienie losowego sortowania do pamięci
+        var dostepneKsiazki = await dostepneKsiazkiQuery
+            .ToListAsync(); // <--- ZATRZYMUJE TŁUMACZENIE SQL, POBIERA DANE
+
+        var losoweKsiazki = dostepneKsiazki
+            .OrderBy(k => Guid.NewGuid()) // <--- TERAZ WYKONYWANE W PAMIĘCI (C#)
+            .Take(5)
+            .ToList();
+
+        // 2. Utworzenie ViewModelu
+        var viewModel = new HomeIndexViewModel
+        {
+
+            DostepneKsiazki = losoweKsiazki
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        // Jeśli użytkownik jest już zalogowany, przekieruj na stronę główną
+        if (User.Identity!.IsAuthenticated)
+        {
+            return RedirectToAction(nameof(Index));
+        }
         return View(new User());
     }
 
+
+    // ZMIENIONE: Akcja POST Register
+
+
+    // ZMIENIONA: Akcja Register z poprawką na losowe sortowanie (w przypadku błędu walidacji)
     [HttpPost]
-    public IActionResult Register(User user)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(User user)
+
     {
         if (ModelState.IsValid)
         {
-            // Ustaw domyślne wartości
             user.dataRejestracji = DateTime.Now;
             user.Rola = "user";
             user.iloscWypKsiazek = 0;
 
-            _context.Users.Add(user);  // dodajemy do DbSet
-            _context.SaveChanges();    // zapis do SQLite
+            _context.Users.Add(user);
+            _context.SaveChanges();
 
             TempData["Message"] = $"Zarejestrowano użytkownika: {user.Imie} {user.Nazwisko} email: {user.email}";
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Login)); ;
         }
-
-        return View("Index", user);
+        return View("Register", user);
     }
 
     [HttpGet]

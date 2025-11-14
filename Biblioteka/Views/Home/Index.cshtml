@@ -1,53 +1,53 @@
-﻿@model Biblioteka.Models.User
+﻿@model Biblioteka.Models.HomeIndexViewModel
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Witaj w Bibliotece!";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
+    <h1 class="display-3">Biblioteka Centralna</h1>
+    <p class="lead">Wypożyczaj, rezerwuj i przeglądaj nasz katalog online.</p>
 </div>
 
 <hr />
 
 @if (TempData["Message"] != null)
 {
-    @* Poprawka CS8602: Jawne rzutowanie z operatorem null-forgiving (!) *@
     <div class="alert alert-success">@((string)TempData["Message"]!)</div>
 }
 
-<div class="d-grid gap-2 col-6 mx-auto mb-5">
-    <h3>Szybki dostęp</h3>
-    
-    @if (!User.Identity.IsAuthenticated)
-    {
-        <a asp-controller="Home" asp-action="Login" class="btn btn-success btn-lg">Zaloguj się</a>
-    }
-
-    <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-info btn-lg">Przeglądaj Katalog Książek</a>
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h3 class="mb-3">Dostępne Tytuły (Losowo)</h3>
+        
+        @if (Model.DostepneKsiazki.Any())
+        {
+            <div class="row">
+                @foreach (var ksiazka in Model.DostepneKsiazki)
+                {
+                    <div class="col-md-4 mb-4">
+                        <div class="card p-3">
+                            <h5 class="card-title">@ksiazka.tytul</h5>
+                            <p class="card-text">Autor: **@ksiazka.autor**</p>
+                            <p class="card-text">Kategoria: @(ksiazka.Kategoria?.Nazwa ?? "N/A")</p>
+                            
+                            <a asp-controller="Ksiazka" asp-action="Details" asp-route-id="@ksiazka.Id" class="btn btn-sm btn-outline-info">Szczegóły</a>
+                            
+                            @* Przycisk do koszyka widoczny, jeśli użytkownik jest zalogowany *@
+                            @if (User.Identity!.IsAuthenticated)
+                            {
+                                <form asp-controller="Ksiazka" asp-action="AddToBasket" method="post" asp-route-id="@ksiazka.Id" class="d-inline mt-2">
+                                    <button type="submit" class="btn btn-sm btn-success">Dodaj do Koszyka</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">Brak dostępnych książek w katalogu.</div>
+        }
+    </div>
 </div>
 
-@if (!User.Identity.IsAuthenticated)
-{
-    <h2>Rejestracja użytkownika</h2>
-
-    <form asp-action="Register" method="post">
-        <div class="form-group">
-            <label>Imię</label>
-            <input asp-for="Imie" class="form-control" />
-        </div>
-        <div class="form-group">
-            <label>Nazwisko</label>
-            <input asp-for="Nazwisko" class="form-control" />
-        </div>
-        <div class="form-group">
-            <label>Email</label>
-            <input asp-for="email" class="form-control" type="email" />
-        </div>
-        <div class="form-group">
-            <label>Hasło</label>
-            <input asp-for="haslo" class="form-control" type="password" />
-        </div>
-
-        <button type="submit" class="btn btn-primary mt-2">Zarejestruj</button>
-    </form>
-}
