@@ -3,12 +3,11 @@
 @using System.Security.Claims
 @{
     ViewData["Title"] = "Panel Użytkownika";
-    // Pobieranie danych z ViewBag (zapewnione przez HomeController)
     var aktywneWypozyczenia = ViewBag.AktywneWypozyczenia as List<Biblioteka.Models.Wypozyczenie>;
     var aktywneRezerwacje = ViewBag.AktywneRezerwacje as List<Biblioteka.Models.Rezerwacja>;
     var historiaWypozyczen = ViewBag.HistoriaWypozyczen as List<Biblioteka.Models.Wypozyczenie>;
     var okresyPrzedluzenia = ViewBag.OkresyPrzedluzenia as SelectList;
-    var maxKsiazek = 5; // Maksymalna liczba książek do wypożyczenia
+    var maxKsiazek = 5;
 }
 
 <div class="container">
@@ -16,7 +15,7 @@
     
     @if (TempData["Message"] != null)
     {
-        <div class="alert alert-info mt-3">@((string)TempData["Message"]!)</div>
+        <div class="alert alert-info mt-3">@TempData["Message"]</div>
     }
 
     <div class="card my-4">
@@ -28,15 +27,13 @@
             <p><strong>Email:</strong> @Model.email</p>
             <p><strong>Rola:</strong> @Model.Rola</p>
 
-            @* Status Długu/Kary *@
             <p>
                 <strong>Zadłużenie/Kara:</strong> 
                 <span class="badge @(Model.Kara > 0 ? "bg-danger" : "bg-success")">
-                    @Model.Kara.ToString("C") @* Formatowanie jako waluta *@
+                    @Model.Kara.ToString("C")
                 </span>
             </p>
 
-            @* Status Blokady Wypożyczeń *@
             @if (Model.IsBlocked)
             {
                 <p>
@@ -100,7 +97,6 @@
                             {
                                 <form asp-controller="Wypozyczenie" asp-action="Extend" method="post" asp-route-wypozyczenieId="@wypozyczenie.Id" class="d-inline">
                                     <div class="input-group">
-                                        @* Używamy asp-items dla poprawnego bindowania *@
                                         <select name="dni" class="form-select form-select-sm" style="width: auto;" asp-items="@ViewBag.OkresyPrzedluzenia"></select>
                                         <button type="submit" class="btn btn-sm btn-warning">Przedłuż</button>
                                     </div>
@@ -141,9 +137,9 @@
             <tbody>
                 @foreach (var rezerwacja in aktywneRezerwacje)
                 {
-                    // FIX CS1061/CS0019: Używamy .HasValue i .Value dla DataWygasniecia
-                    var isReady = rezerwacja.DataWygasniecia.HasValue && rezerwacja.DataWygasniecia.Value > DateTime.MinValue;
-                    var isExpired = isReady && rezerwacja.DataWygasniecia.Value < DateTime.Now; 
+                    @* POPRAWKA: Uproszczone sprawdzenie statusu rezerwacji *@
+                    var isReady = rezerwacja.DataWygasniecia != null;
+                    var isExpired = isReady && rezerwacja.DataWygasniecia < DateTime.Now; 
                     
                     <tr class="@(isReady ? "table-success" : "") @(isExpired ? "table-warning" : "")">
                         <td>@rezerwacja.Ksiazka?.tytul</td>
@@ -159,18 +155,6 @@
                             }
                         </td>
                         <td>
-                            @if (isReady)
-                            {
-                                @rezerwacja.DataWygasniecia!.Value.ToShortDateString() 
-                                @(isExpired ? "(WYGASŁA)" : "")
-                            }
-                            else
-                            {
-                                <span>---</span>
-                            }
-                        </td>
-                        <td>
-                            @* Użytkownik może anulować swoją rezerwację z poziomu profilu *@
                             <form asp-controller="Rezerwacja" asp-action="Cancel" method="post" asp-route-id="@rezerwacja.Id" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-danger" 
                                         onclick="return confirm('Czy na pewno chcesz anulować rezerwację na @rezerwacja.Ksiazka?.tytul?');">
@@ -204,15 +188,15 @@
             <tbody>
                 @foreach (var wypozyczenie in historiaWypozyczen.OrderByDescending(w => w.FaktycznaDataZwrotu))
                 {
-                    @* FIX: Porównanie dat odbywa się na Value.Date *@
+                    @* POPRAWKA: Poprawne sprawdzenie czy zwrot był po terminie *@
                     var isOverdue = wypozyczenie.FaktycznaDataZwrotu.HasValue && 
-                                    wypozyczenie.FaktycznaDataZwrotu.Value.Date > wypozyczenie.OczekiwanaDataZwrotu.Date;
+                                    wypozyczenie.FaktycznaDataZwrotu.Value > wypozyczenie.OczekiwanaDataZwrotu;
                     
                     <tr class="@(isOverdue ? "table-warning" : "table-light")">
                         <td>@wypozyczenie.Ksiazka?.tytul</td>
                         <td>@wypozyczenie.DataWypozyczenia.ToShortDateString()</td>
                         <td>@wypozyczenie.OczekiwanaDataZwrotu.ToShortDateString()</td>
-                        <td>@wypozyczenie.FaktycznaDataZwrotu?.ToShortDateString()</td>
+                        <td>@(wypozyczenie.FaktycznaDataZwrotu?.ToShortDateString() ?? "Brak danych")</td>
                         <td>
                             @if (isOverdue)
                             {
@@ -236,5 +220,4 @@
     <div class="mt-5">
         <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-primary btn-lg">Przeglądaj Katalog</a>
     </div>
-
 </div>

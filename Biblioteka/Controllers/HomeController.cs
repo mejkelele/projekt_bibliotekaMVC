@@ -1,7 +1,7 @@
 using Biblioteka.Data;
 using Biblioteka.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // <--- DODANA BRAKUJĄCA LINIA
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
@@ -72,22 +72,26 @@ public class HomeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(User user)
-
     {
         if (ModelState.IsValid)
         {
+            // 🚨 KRYTYCZNA POPRAWKA: HASZOWANIE HASŁA PRZED ZAPISEM DO BAZY
+            // Używamy BCrypt.HashPassword, aby przekształcić plain text w bezpieczny hash.
+            user.haslo = BCrypt.Net.BCrypt.HashPassword(user.haslo);
+
             user.dataRejestracji = DateTime.Now;
             user.Rola = "user";
             user.iloscWypKsiazek = 0;
 
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(); // Użyj async SaveChanges
 
             TempData["Message"] = $"Zarejestrowano użytkownika: {user.Imie} {user.Nazwisko} email: {user.email}";
-            return RedirectToAction(nameof(Login)); ;
+            return RedirectToAction(nameof(Login));
         }
         return View("Register", user);
     }
+
 
     [HttpGet]
     public IActionResult Login()
@@ -165,7 +169,7 @@ public class HomeController : Controller
             return RedirectToAction("Login", "Home");
         }
 
-        // POBIERANIE AKTYWNYCH WYPOŻYCZEŃ (Wypozyczenia z FaktycznaDataZwrotu == null)
+        // 1. POBIERANIE AKTYWNYCH WYPOŻYCZEŃ
         var aktywneWypozyczenia = await _context.Wypozyczenia
             .Where(w => w.UserId == userId && w.FaktycznaDataZwrotu == null)
             .Include(w => w.Ksiazka)
@@ -173,7 +177,7 @@ public class HomeController : Controller
             .ToListAsync();
         ViewBag.AktywneWypozyczenia = aktywneWypozyczenia;
 
-        // POBIERANIE AKTYWNYCH REZERWACJI (Rezerwacje z IsActive == true)
+        // 2. POBIERANIE AKTYWNYCH REZERWACJI
         var aktywneRezerwacje = await _context.Rezerwacje
             .Where(r => r.UserId == userId && r.IsActive)
             .Include(r => r.Ksiazka)
@@ -181,15 +185,15 @@ public class HomeController : Controller
             .ToListAsync();
         ViewBag.AktywneRezerwacje = aktywneRezerwacje;
 
-        // NOWA LOGIKA: POBIERANIE HISTORII WYPOŻYCZEŃ (Wypozyczenia z FaktycznaDataZwrotu != null)
+        // 3. POBIERANIE HISTORII WYPOŻYCZEŃ
         var historiaWypozyczen = await _context.Wypozyczenia
             .Where(w => w.UserId == userId && w.FaktycznaDataZwrotu != null)
             .Include(w => w.Ksiazka)
-            .OrderByDescending(w => w.FaktycznaDataZwrotu) // Najnowsze zwroty na górze
+            .OrderByDescending(w => w.FaktycznaDataZwrotu)
             .ToListAsync();
         ViewBag.HistoriaWypozyczen = historiaWypozyczen;
 
-        // Konfiguracja SelectList dla przedłużenia
+        // 4. Konfiguracja SelectList
         var okresy = new List<int> { 7, 14, 30 };
         ViewBag.OkresyPrzedluzenia = new SelectList(
             okresy.Select(d => new { Value = d.ToString(), Text = $"{d} dni" }).ToList(),
@@ -198,5 +202,6 @@ public class HomeController : Controller
         );
 
         return View(user);
+
     }
 }

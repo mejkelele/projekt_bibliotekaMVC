@@ -34,5 +34,7 @@ namespace Biblioteka.Models
         // Właściwości Nawigacyjne
         public User? User { get; set; }
         public Ksiazka? Ksiazka { get; set; }
+
+        public DateTime? DataZwrotu { get; set; } // Dodanie znaku '?'
     }
 }
