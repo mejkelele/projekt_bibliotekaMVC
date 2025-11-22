@@ -6,6 +6,7 @@
     var aktywneWypozyczenia = ViewBag.AktywneWypozyczenia as List<Biblioteka.Models.Wypozyczenie>;
     var aktywneRezerwacje = ViewBag.AktywneRezerwacje as List<Biblioteka.Models.Rezerwacja>;
     var historiaWypozyczen = ViewBag.HistoriaWypozyczen as List<Biblioteka.Models.Wypozyczenie>;
+    var zapisaneWyszukiwania = ViewBag.ZapisaneWyszukiwania as List<Biblioteka.Models.HistoriaWyszukiwan>;
     var okresyPrzedluzenia = ViewBag.OkresyPrzedluzenia as SelectList;
     var maxKsiazek = 5;
 }
@@ -18,206 +19,162 @@
         <div class="alert alert-info mt-3">@TempData["Message"]</div>
     }
 
-    <div class="card my-4">
-        <div class="card-header bg-primary text-white">
-            Informacje o Koncie
-        </div>
+    <div class="card my-4 shadow-sm">
+        <div class="card-header bg-primary text-white">Informacje o Koncie</div>
         <div class="card-body">
             <p><strong>Imię i Nazwisko:</strong> @Model.Imie @Model.Nazwisko</p>
             <p><strong>Email:</strong> @Model.email</p>
             <p><strong>Rola:</strong> @Model.Rola</p>
-
-            <p>
-                <strong>Zadłużenie/Kara:</strong> 
-                <span class="badge @(Model.Kara > 0 ? "bg-danger" : "bg-success")">
-                    @Model.Kara.ToString("C")
-                </span>
-            </p>
-
-            @if (Model.IsBlocked)
-            {
-                <p>
-                    <strong>Status Wypożyczeń:</strong> 
-                    <span class="badge bg-danger">KONTO ZABLOKOWANE</span>
-                </p>
-            }
-
-            <p>
-                <strong>Aktualna Liczba Wypożyczonych Książek:</strong> 
-                <span class="badge @(Model.iloscWypKsiazek >= maxKsiazek || Model.IsBlocked ? "bg-danger" : "bg-info")">
-                    @Model.iloscWypKsiazek z @maxKsiazek
-                </span>
-            </p>
-
+            <p><strong>Zadłużenie/Kara:</strong> <span class="badge @(Model.Kara > 0 ? "bg-danger" : "bg-success")">@Model.Kara.ToString("C")</span></p>
+            @if (Model.IsBlocked) { <p><strong>Status Wypożyczeń:</strong> <span class="badge bg-danger">KONTO ZABLOKOWANE</span></p> }
+            <p><strong>Aktualna Liczba Wypożyczonych Książek:</strong> <span class="badge @(Model.iloscWypKsiazek >= maxKsiazek || Model.IsBlocked ? "bg-danger" : "bg-info")">@Model.iloscWypKsiazek z @maxKsiazek</span></p>
             @if (!Model.IsBlocked)
             {
-                if (Model.iloscWypKsiazek < maxKsiazek)
-                {
-                    <span class="text-success">Możesz wypożyczyć jeszcze @(maxKsiazek - Model.iloscWypKsiazek) książek.</span>
-                }
-                else
-                {
-                    <span class="text-danger">Osiągnąłeś/aś limit wypożyczeń.</span>
-                }
+                if (Model.iloscWypKsiazek < maxKsiazek) { <span class="text-success">Możesz wypożyczyć jeszcze @(maxKsiazek - Model.iloscWypKsiazek) książek.</span> }
+                else { <span class="text-danger">Osiągnąłeś/aś limit wypożyczeń.</span> }
+            }
+            else { <span class="text-danger">Nie możesz wypożyczać z powodu blokady konta.</span> }
+        </div>
+    </div>
+
+    <div class="card my-4 shadow-sm">
+        <div class="card-header">Zapisane Wyszukiwania</div>
+        <div class="card-body">
+            @if (zapisaneWyszukiwania != null && zapisaneWyszukiwania.Any())
+            {
+                <ul class="list-group">
+                    @foreach (var wyszukiwanie in zapisaneWyszukiwania)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a asp-controller="Ksiazka" asp-action="Index" asp-route-searchString="@wyszukiwanie.Zapytanie" class="fw-bold">@wyszukiwanie.Nazwa</a>
+                                <small class="d-block text-muted">Zapytanie: "@wyszukiwanie.Zapytanie"</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <small class="text-muted me-3">@wyszukiwanie.DataZapisu.ToShortDateString()</small>
+                                <form asp-controller="Home" asp-action="DeleteSearch" method="post" asp-route-id="@wyszukiwanie.Id">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Czy na pewno chcesz usunąć to wyszukiwanie?');">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
             }
             else
             {
-                <span class="text-danger">Nie możesz wypożyczać z powodu blokady konta.</span>
+                <div class="alert alert-info">Brak zapisanych wyszukiwań.</div>
             }
         </div>
     </div>
 
-    <h3 class="mt-4">Aktywne Wypożyczenia</h3>
-    @if (aktywneWypozyczenia != null && aktywneWypozyczenia.Any())
-    {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Tytuł Książki</th>
-                    <th>Data Wypożyczenia</th>
-                    <th>Oczekiwany Zwrot</th>
-                    <th>Przedłużono</th>
-                    <th>Akcje</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var wypozyczenie in aktywneWypozyczenia)
-                {
-                    var isOverdue = wypozyczenie.OczekiwanaDataZwrotu < DateTime.Now;
-                    <tr class="@(isOverdue ? "table-danger" : "")">
-                        <td>@wypozyczenie.Ksiazka?.tytul</td>
-                        <td>@wypozyczenie.DataWypozyczenia.ToShortDateString()</td>
-                        <td>
-                            @wypozyczenie.OczekiwanaDataZwrotu.ToShortDateString()
-                            @(isOverdue ? "(PRZETERMINOWANA)" : "")
-                        </td>
-                        <td>@(wypozyczenie.Przedluzono ? "Tak" : "Nie")</td>
-                        <td>
-                            @if (!wypozyczenie.Przedluzono && !isOverdue)
+    <div class="card my-4 shadow-sm">
+        <div class="card-header">Aktywne Wypożyczenia</div>
+        <div class="card-body">
+            @if (aktywneWypozyczenia != null && aktywneWypozyczenia.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Tytuł Książki</th><th>Data Wypożyczenia</th><th>Oczekiwany Zwrot</th><th>Przedłużono</th><th>Akcje</th></tr></thead>
+                        <tbody>
+                            @foreach (var wypozyczenie in aktywneWypozyczenia)
                             {
-                                <form asp-controller="Wypozyczenie" asp-action="Extend" method="post" asp-route-wypozyczenieId="@wypozyczenie.Id" class="d-inline">
-                                    <div class="input-group">
-                                        <select name="dni" class="form-select form-select-sm" style="width: auto;" asp-items="@ViewBag.OkresyPrzedluzenia"></select>
-                                        <button type="submit" class="btn btn-sm btn-warning">Przedłuż</button>
-                                    </div>
-                                </form>
+                                var isOverdue = wypozyczenie.OczekiwanaDataZwrotu < DateTime.Now;
+                                <tr class="@(isOverdue ? "table-danger" : "")">
+                                    <td>@wypozyczenie.Ksiazka?.tytul</td>
+                                    <td>@wypozyczenie.DataWypozyczenia.ToShortDateString()</td>
+                                    <td>@wypozyczenie.OczekiwanaDataZwrotu.ToShortDateString() @(isOverdue ? "(PRZETERMINOWANA)" : "")</td>
+                                    <td>@(wypozyczenie.Przedluzono ? "Tak" : "Nie")</td>
+                                    <td>
+                                        @if (!wypozyczenie.Przedluzono && !isOverdue)
+                                        {
+                                            <form asp-controller="Wypozyczenie" asp-action="Extend" method="post" asp-route-wypozyczenieId="@wypozyczenie.Id" class="d-inline">
+                                                <div class="input-group"><select name="dni" class="form-select form-select-sm" style="width: auto;" asp-items="@ViewBag.OkresyPrzedluzenia"></select><button type="submit" class="btn btn-sm btn-warning">Przedłuż</button></div>
+                                            </form>
+                                        }
+                                        else if (isOverdue) { <span class="text-danger">Zwróć natychmiast</span> }
+                                        else { <span class="text-muted">Przedłużenie wykorzystane</span> }
+                                    </td>
+                                </tr>
                             }
-                            else if (isOverdue)
-                            {
-                                <span class="text-danger">Zwróć natychmiast</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Przedłużenie wykorzystane</span>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-success">Brak aktywnych wypożyczeń.</div>
-    }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="alert alert-success">Brak aktywnych wypożyczeń.</div> }
+        </div>
+    </div>
 
-    <h3 class="mt-4">Aktywne Rezerwacje</h3>
-    @if (aktywneRezerwacje != null && aktywneRezerwacje.Any())
-    {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Książka</th>
-                    <th>Data Rezerwacji</th>
-                    <th>Status</th>
-                    <th>Odbiór Wygasa</th>
-                    <th>Akcje</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var rezerwacja in aktywneRezerwacje)
-                {
-                    @* POPRAWKA: Uproszczone sprawdzenie statusu rezerwacji *@
-                    var isReady = rezerwacja.DataWygasniecia != null;
-                    var isExpired = isReady && rezerwacja.DataWygasniecia < DateTime.Now; 
-                    
-                    <tr class="@(isReady ? "table-success" : "") @(isExpired ? "table-warning" : "")">
-                        <td>@rezerwacja.Ksiazka?.tytul</td>
-                        <td>@rezerwacja.DataRezerwacji.ToShortDateString()</td>
-                        <td>
-                            @if (isReady)
+    <div class="card my-4 shadow-sm">
+        <div class="card-header">Aktywne Rezerwacje</div>
+        <div class="card-body">
+            @if (aktywneRezerwacje != null && aktywneRezerwacje.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Książka</th><th>Data Rezerwacji</th><th>Status</th><th>Odbiór Wygasa</th><th>Akcje</th></tr></thead>
+                        <tbody>
+                            @foreach (var rezerwacja in aktywneRezerwacje)
                             {
-                                <span class="badge bg-success">GOTOWA DO ODBIORU</span>
+                                var isReady = rezerwacja.DataWygasniecia != null;
+                                var isExpired = isReady && rezerwacja.DataWygasniecia < DateTime.Now;
+                                <tr class="@(isExpired ? "table-warning" : "")">
+                                    <td>@rezerwacja.Ksiazka?.tytul</td>
+                                    <td>@rezerwacja.DataRezerwacji.ToShortDateString()</td>
+                                    <td>
+                                        @if (isExpired) { <span class="badge bg-warning text-dark">WYGASŁA</span> }
+                                        else if (isReady) { <span class="badge bg-success">GOTOWA DO ODBIORU</span> }
+                                        else { <span class="badge bg-secondary">W KOLEJCE</span> }
+                                    </td>
+                                    <td>@(isReady ? rezerwacja.DataWygasniecia.ToShortDateString() : "-")</td>
+                                    <td>
+                                        <form asp-controller="Rezerwacja" asp-action="Cancel" method="post" asp-route-id="@rezerwacja.Id" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Czy na pewno chcesz anulować rezerwację na @rezerwacja.Ksiazka?.tytul?');">Anuluj</button>
+                                        </form>
+                                    </td>
+                                </tr>
                             }
-                            else
-                            {
-                                <span class="badge bg-secondary">W KOLEJCE</span>
-                            }
-                        </td>
-                        <td>
-                            <form asp-controller="Rezerwacja" asp-action="Cancel" method="post" asp-route-id="@rezerwacja.Id" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('Czy na pewno chcesz anulować rezerwację na @rezerwacja.Ksiazka?.tytul?');">
-                                    Anuluj
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-info">Brak aktywnych rezerwacji.</div>
-    }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="alert alert-info">Brak aktywnych rezerwacji.</div> }
+        </div>
+    </div>
 
-    <h3 class="mt-4">Historia Wypożyczeń (Zwrócone Książki)</h3>
-    @if (historiaWypozyczen != null && historiaWypozyczen.Any())
-    {
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Tytuł Książki</th>
-                    <th>Wypożyczenie</th>
-                    <th>Oczekiwany Zwrot</th>
-                    <th>Faktyczny Zwrot</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var wypozyczenie in historiaWypozyczen.OrderByDescending(w => w.FaktycznaDataZwrotu))
-                {
-                    @* POPRAWKA: Poprawne sprawdzenie czy zwrot był po terminie *@
-                    var isOverdue = wypozyczenie.FaktycznaDataZwrotu.HasValue && 
-                                    wypozyczenie.FaktycznaDataZwrotu.Value > wypozyczenie.OczekiwanaDataZwrotu;
-                    
-                    <tr class="@(isOverdue ? "table-warning" : "table-light")">
-                        <td>@wypozyczenie.Ksiazka?.tytul</td>
-                        <td>@wypozyczenie.DataWypozyczenia.ToShortDateString()</td>
-                        <td>@wypozyczenie.OczekiwanaDataZwrotu.ToShortDateString()</td>
-                        <td>@(wypozyczenie.FaktycznaDataZwrotu?.ToShortDateString() ?? "Brak danych")</td>
-                        <td>
-                            @if (isOverdue)
+    <div class="card my-4 shadow-sm">
+        <div class="card-header">Historia Wypożyczeń (Zwrócone Książki)</div>
+        <div class="card-body">
+            @if (historiaWypozyczen != null && historiaWypozyczen.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Tytuł Książki</th><th>Wypożyczenie</th><th>Oczekiwany Zwrot</th><th>Faktyczny Zwrot</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var wypozyczenie in historiaWypozyczen.OrderByDescending(w => w.FaktycznaDataZwrotu))
                             {
-                                <span class="badge bg-danger">ZWROT PO TERMINIE</span>
+                                var isOverdue = wypozyczenie.FaktycznaDataZwrotu.HasValue && wypozyczenie.FaktycznaDataZwrotu.Value > wypozyczenie.OczekiwanaDataZwrotu;
+                                <tr class="@(isOverdue ? "table-warning" : "")">
+                                    <td>@wypozyczenie.Ksiazka?.tytul</td>
+                                    <td>@wypozyczenie.DataWypozyczenia.ToShortDateString()</td>
+                                    <td>@wypozyczenie.OczekiwanaDataZwrotu.ToShortDateString()</td>
+                                    <td>@(wypozyczenie.FaktycznaDataZwrotu?.ToShortDateString() ?? "Brak danych")</td>
+                                    <td>
+                                        @if (isOverdue) { <span class="badge bg-danger">ZWROT PO TERMINIE</span> }
+                                        else { <span class="badge bg-success">ZWROT NA CZAS</span> }
+                                    </td>
+                                </tr>
                             }
-                            else
-                            {
-                                <span class="badge bg-success">ZWROT NA CZAS</span>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-info">Brak zakończonych wypożyczeń w historii.</div>
-    }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="alert alert-info">Brak zakończonych wypożyczeń w historii.</div> }
+        </div>
+    </div>
 
-    <div class="mt-5">
+    <div class="mt-5 text-center">
         <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-primary btn-lg">Przeglądaj Katalog</a>
     </div>
 </div>

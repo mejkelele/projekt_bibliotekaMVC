@@ -1,6 +1,6 @@
 @model IEnumerable<Biblioteka.Models.Ksiazka>
 @{
-    ViewData["Title"] = "Koszyk Wypożyczeń";
+    ViewData["Title"] = "Twój koszyk";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -31,7 +31,7 @@
                     <td>@(item.Kategoria?.Nazwa)</td>
                     <td>
                         <form asp-action="RemoveFromBasket" method="post" asp-route-id="@item.Id" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger">Usuń z koszyka</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
                         </form>
                     </td>
                 </tr>
@@ -41,10 +41,10 @@
 
     <hr />
 
-    <h4>Finalizacja Wypożyczenia</h4>
+    <h4>Finalizacja</h4>
     <form asp-controller="Wypozyczenie" asp-action="FinalizeWypozyczenie" method="post">
         <div class="form-group row">
-            <label for="okresWypozyczenia" class="col-sm-4 col-form-label">Wybierz okres wypożyczenia:</label>
+            <label for="okresWypozyczenia" class="col-sm-4 col-form-label">Okres wypożyczenia:</label>
             <div class="col-sm-3">
                 @* NAPRAWA CS1503: Użycie @ przed ViewBag.OkresyWypozyczenia *@
                 <select name="okresWypozyczenia" id="okresWypozyczenia" class="form-control" asp-items="@ViewBag.OkresyWypozyczenia"></select>
@@ -54,7 +54,7 @@
             </div>
         </div>
         <div class="mt-3">
-            <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-secondary">Kontynuuj Przeglądanie</a>
+            <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-secondary">Wróć do katalogu</a>
         </div>
     </form>
 }

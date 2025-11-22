@@ -24,15 +24,12 @@
 
             <dt class="col-sm-4">Tagi:</dt>
             <dd class="col-sm-8">@Model.Ksiazka.tag</dd>
-            <dt class="col-sm-4">Tagi:</dt>
-            <dd class="col-sm-8">@Model.Ksiazka.tag</dd>
         </dl>
 
-        
         <h3 class="mt-4">Spis Treści</h3>
         @if (!string.IsNullOrEmpty(Model.Ksiazka.SpisTresci))
         {
-            <div class="card card-body bg-light">
+            <div class="card card-body">
                 @Html.Raw(Model.Ksiazka.SpisTresci!.Replace("\n", "<br />"))
             </div>
         }
@@ -40,7 +37,6 @@
         {
             <p class="text-muted">Brak dostępnego spisu treści.</p>
         }
-        </dl>
 
         <h3 class="mt-4">Status</h3>
         <p>
@@ -49,7 +45,6 @@
             </span>
         </p>
         
-        @* Przycisk powrotu do katalogu *@
         <div class="mt-4">
             <a asp-action="Index" class="btn btn-secondary">Powrót do Katalogu</a>
         </div>

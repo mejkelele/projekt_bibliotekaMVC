@@ -1,53 +1,52 @@
-﻿@model Biblioteka.Models.HomeIndexViewModel
+﻿@model HomeIndexViewModel
 @{
-    ViewData["Title"] = "Witaj w Bibliotece!";
+    ViewData["Title"] = "Strona Główna";
 }
 
 <div class="text-center">
-    <h1 class="display-3">Biblioteka Centralna</h1>
-    <p class="lead">Wypożyczaj, rezerwuj i przeglądaj nasz katalog online.</p>
+    <h1 class="display-4">Hej, czytelniku!</h1>
+    <p>Co byś dziś przeczytał?</p>
 </div>
 
-<hr />
-
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success">@((string)TempData["Message"]!)</div>
-}
-
-<div class="row mb-5">
-    <div class="col-md-12">
-        <h3 class="mb-3">Dostępne Tytuły (Losowo)</h3>
-        
-        @if (Model.DostepneKsiazki.Any())
-        {
-            <div class="row">
-                @foreach (var ksiazka in Model.DostepneKsiazki)
-                {
-                    <div class="col-md-4 mb-4">
-                        <div class="card p-3">
+<div class="mt-5">
+    <h2 class="mb-4">Ostatnio dodane książki</h2>
+    
+    @if (Model.DostepneKsiazki != null && Model.DostepneKsiazki.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var ksiazka in Model.DostepneKsiazki)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
                             <h5 class="card-title">@ksiazka.tytul</h5>
-                            <p class="card-text">Autor: **@ksiazka.autor**</p>
-                            <p class="card-text">Kategoria: @(ksiazka.Kategoria?.Nazwa ?? "N/A")</p>
-                            
-                            <a asp-controller="Ksiazka" asp-action="Details" asp-route-id="@ksiazka.Id" class="btn btn-sm btn-outline-info">Szczegóły</a>
-                            
-                            @* Przycisk do koszyka widoczny, jeśli użytkownik jest zalogowany *@
-                            @if (User.Identity!.IsAuthenticated)
-                            {
-                                <form asp-controller="Ksiazka" asp-action="AddToBasket" method="post" asp-route-id="@ksiazka.Id" class="d-inline mt-2">
-                                    <button type="submit" class="btn btn-sm btn-success">Dodaj do Koszyka</button>
-                                </form>
-                            }
+                            <p class="card-text text-muted">@ksiazka.autor</p>
+                            <div class="mt-auto">
+                                <a asp-controller="Ksiazka" asp-action="Details" asp-route-id="@ksiazka.Id" class="btn btn-sm btn-outline-primary">Szczegóły</a>
+                                
+                                @if ((User.IsInRole("user") || User.IsInRole("admin")) && ksiazka.stan == "Dostępna")
+                                {
+                                    <form asp-controller="Ksiazka" asp-action="AddToBasket" asp-route-id="@ksiazka.Id" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-cart-plus"></i> Dodaj do koszyka
+                                        </button>
+                                    </form>
+                                }
+                            </div>
                         </div>
                     </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning">Brak dostępnych książek w katalogu.</div>
-        }
-    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Brak nowo dodanych książek do wyświetlenia.
+        </div>
+    }
 </div>
 
+<div class="text-center mt-5">
+    <a asp-controller="Ksiazka" asp-action="Index" class="btn btn-lg btn-primary">Przeglądaj wszystko</a>
+</div>
