@@ -1,25 +1,26 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biblioteka.Models
 {
     public class HistoriaWyszukiwan
     {
+        [Key]
         public int Id { get; set; }
 
-        [Display(Name = "Użytkownik")]
+        [Required]
+        public string Nazwa { get; set; }
+
+        [Required]
+        public string Zapytanie { get; set; }
+
+        public DateTime DataZapisu { get; set; }
+
+        // Klucz obcy do użytkownika
         public int UserId { get; set; }
 
-        [Display(Name = "Nazwa Wyszukiwania")]
-        public string Nazwa { get; set; } = string.Empty; // Nazwa nadana przez użytkownika
-
-        [Display(Name = "Zapytanie")]
-        public string Zapytanie { get; set; } = string.Empty; // Pełne zapytanie JSON/String
-
-        [Display(Name = "Data Zapisu")]
-        public DateTime DataZapisu { get; set; } = DateTime.Now;
-
-        // Właściwość nawigacyjna
-        public User? User { get; set; }
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; }
     }
 }

@@ -9,103 +9,105 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Biblioteka
 build_property.RootNamespace = Biblioteka
-build_property.ProjectDir = C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka\
+build_property.ProjectDir = /Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\mejke\Desktop\projekt_biblioteka\Biblioteka
+build_property.MSBuildProjectDirectory = /Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka
 build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Home/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Home/Login.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxMb2dpbi5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Home/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Mb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Home/Privacy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Home/Register.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxSZWdpc3Rlci5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Home/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9SZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Home/UserPage.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxVc2VyUGFnZS5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Home/UserPage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Vc2VyUGFnZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Kategoria/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2F0ZWdvcmlhXENyZWF0ZS5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Kategoria/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS2F0ZWdvcmlhL0NyZWF0ZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Kategoria/Delete.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2F0ZWdvcmlhXERlbGV0ZS5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Kategoria/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS2F0ZWdvcmlhL0RlbGV0ZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Kategoria/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2F0ZWdvcmlhXEVkaXQuY3NodG1s
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Kategoria/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS2F0ZWdvcmlhL0VkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Kategoria/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2F0ZWdvcmlhXEluZGV4LmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Kategoria/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS2F0ZWdvcmlhL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Ksiazka/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS3NpYXprYVxDcmVhdGUuY3NodG1s
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Ksiazka/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS3NpYXprYS9DcmVhdGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Ksiazka/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS3NpYXprYVxEZXRhaWxzLmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Ksiazka/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS3NpYXprYS9EZXRhaWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Ksiazka/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS3NpYXprYVxFZGl0LmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Ksiazka/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS3NpYXprYS9FZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Ksiazka/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS3NpYXprYVxJbmRleC5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Ksiazka/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS3NpYXprYS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Ksiazka/ViewBasket.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS3NpYXprYVxWaWV3QmFza2V0LmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Ksiazka/ViewBasket.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvS3NpYXprYS9WaWV3QmFza2V0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Rezerwacja/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmV6ZXJ3YWNqYVxJbmRleC5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Rezerwacja/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmV6ZXJ3YWNqYS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Shared/Error.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Shared/_ValidationScriptsPartial.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/User/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxFZGl0LmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/User/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVXNlci9FZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/User/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxJbmRleC5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/User/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVXNlci9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Wypozyczenie/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcV3lwb3p5Y3plbmllXEluZGV4LmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Wypozyczenie/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvV3lwb3p5Y3plbmllL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/_ViewImports.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/_ViewStart.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/mejke/Desktop/projekt_biblioteka/Biblioteka/Views/Shared/_Layout.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = b-5jna306ag0
+[/Users/hubertposkrobko/RiderProjects/projekt_bibliotekaMVC/Biblioteka/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-bm50qs4ls5

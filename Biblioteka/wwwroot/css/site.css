@@ -20,3 +20,12 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Nowoczesny hover dla linków tekstowych w navbarze */
+.navbar-nav .nav-link:not(.btn) {
+    transition: font-weight 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:not(.btn):hover {
+    font-weight: bold;
+}

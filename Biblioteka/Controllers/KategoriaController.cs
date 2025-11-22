@@ -4,13 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+
 
 namespace Biblioteka.Controllers
 {
-    // Dostęp do zarządzania kategoriami tylko dla Pracownika/Administratora
     [Authorize(Roles = "worker,admin")]
     public class KategoriaController : Controller
     {
@@ -21,7 +18,6 @@ namespace Biblioteka.Controllers
             _context = context;
         }
 
-        // AKCJA 1: Wyświetla listę kategorii wraz z ich rodzicami
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -33,7 +29,6 @@ namespace Biblioteka.Controllers
             return View(kategorie);
         }
 
-        // GET: Kategoria/Create
         [HttpGet]
         public async Task<IActionResult> Create()
         {

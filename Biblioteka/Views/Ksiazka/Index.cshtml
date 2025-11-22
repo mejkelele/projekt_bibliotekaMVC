@@ -1,84 +1,80 @@
 @model IEnumerable<Biblioteka.Models.Ksiazka>
 @{
-    ViewData["Title"] = "Katalog Książek";
-    var selectedKategoriaId = ViewBag.SelectedKategoriaId; 
-    var currentFilter = ViewBag.CurrentFilter;
+    ViewData["Title"] = "Katalog książek";
+    int? selectedKategoriaId = ViewBag.SelectedKategoriaId;
+    string? currentFilter = ViewBag.CurrentFilter;
+    int bookCount = Model.Count();
 }
 
 <h1>@ViewData["Title"]</h1>
 
 <div class="row mb-3">
     <div class="col-md-7">
-        @* JEDEN FORMULARZ DLA FILTROWANIA I WYSZUKIWANIA *@
         <form asp-action="Index" method="get">
-            @* W tej sekcji nie umieszczamy ukrytego pola kategoriaId, aby uniknąć konfliktów z polem select *@
-
-            <div class="input-group mb-3">
-                <label class="input-group-text" for="filterKategoriaId">Kategoria:</label>
-                <select name="kategoriaId" id="filterKategoriaId" class="form-control" 
-                        onchange="this.form.submit()"> 
-                    @* NAPRAWIONE: Ustawiamy wartość na 0 dla "Wszystkie Kategorie" *@
-                    <option value="0">Wszystkie Kategorie</option>
-                    @if (ViewBag.KategoriaId is SelectList kategoriaList) 
-                    {
-                        @foreach (var item in kategoriaList)
+            <div class="d-flex">
+                <div class="input-group me-2">
+                    <label class="input-group-text" for="filterKategoriaId">Kategoria:</label>
+                    <select name="kategoriaId" id="filterKategoriaId" class="form-control" onchange="this.form.submit()">
+                        <option value="">Wszystkie</option>
+                        @if (ViewBag.KategoriaId is SelectList kategoriaList)
                         {
-                            <option value="@item.Value" selected="@(item.Value == selectedKategoriaId?.ToString())">
-                                @item.Text
-                            </option>
+                            @foreach (var item in kategoriaList)
+                            {
+                                <option value="@item.Value" selected="@(item.Value == selectedKategoriaId?.ToString())">
+                                    @item.Text
+                                </option>
+                            }
                         }
-                    }
-                </select>
-            </div>
-            
-            <div class="input-group">
-                @* Przechowujemy ID kategorii w ukrytym polu TYLKO wtedy, gdy chcemy zachować filtr podczas wyszukiwania tekstowego *@
-                @if (selectedKategoriaId != null && selectedKategoriaId > 0)
-                {
-                    <input type="hidden" name="kategoriaId" value="@selectedKategoriaId" />
-                }
+                    </select>
+                </div>
 
-                <input type="text" name="searchString" value="@currentFilter" class="form-control" placeholder="Szukaj (Tytuł, Autor, ISBN, Tag)..." />
-                <button type="submit" class="btn btn-primary">Szukaj</button>
-                
-                @if (!string.IsNullOrEmpty(currentFilter))
-                {
-                    <a asp-action="Index" asp-route-kategoriaId="@selectedKategoriaId" class="btn btn-warning">Wyczyść Szukanie</a>
-                }
-
-                @* Views/Ksiazka/Index.cshtml - Fragment pod polem wyszukiwania *@
-                    @if (!string.IsNullOrEmpty(currentFilter))
+                <div class="input-group">
+                    <input type="text" name="searchString" value="@currentFilter" class="form-control" placeholder="Szukaj (Tytuł, Autor, ISBN, Tag)..." />
+                    <button type="submit" class="btn btn-primary">Szukaj</button>
+                    @if (!string.IsNullOrEmpty(currentFilter) || selectedKategoriaId.HasValue)
                     {
-                        <form asp-action="SaveSearch" method="post" class="d-inline ms-3">
-                            <input type="hidden" name="searchString" value="@currentFilter" />
-                            <input type="text" name="nazwaZapisu" placeholder="Nazwa zapisu (np. 'Historyczne książki')" required class="form-control form-control-sm d-inline w-auto" />
-                            <button type="submit" class="btn btn-sm btn-info">Zapisz Wyszukiwanie</button>
-                        </form>
+                        <a asp-action="Index" class="btn btn-secondary">Wyczyść</a>
                     }
+                </div>
+            </div>
+            <div class="form-text">
+                Spacja działa jak AND. Użyj "OR" dla alternatywy, a "-" dla negacji (np. "Potop Sienkiewicz OR -wojna").
             </div>
         </form>
+        
+        @if (!string.IsNullOrEmpty(currentFilter))
+        {
+            <form asp-action="SaveSearch" method="post" class="mt-2">
+                <div class="input-group">
+                    <input type="hidden" name="searchString" value="@currentFilter" />
+                    <input type="text" name="nazwaZapisu" placeholder="Nazwa dla tego wyszukiwania..." required class="form-control form-control-sm" />
+                    <button type="submit" class="btn btn-sm btn-outline-info">Zapisz Wyszukiwanie</button>
+                </div>
+            </form>
+        }
     </div>
-    
     <div class="col-md-5 text-end">
-        @* Przycisk dodawania widoczny tylko dla ról 'worker' lub 'admin' *@
         @if (User.IsInRole("worker") || User.IsInRole("admin"))
         {
             <a asp-action="Create" class="btn btn-primary">Dodaj Nową Książkę</a>
         }
-        @* Link do koszyka (dla USERÓW) *@
-        @if (User.IsInRole("user"))
+        @if (User.IsInRole("user") || User.IsInRole("admin"))
         {
-             <a asp-action="ViewBasket" class="btn btn-success">Przejdź do Koszyka</a>
+            <a asp-action="ViewBasket" class="btn btn-success">Przejdź do Koszyka</a>
         }
     </div>
 </div>
 
 @if (TempData["Message"] != null)
 {
-    <div class="alert alert-success mt-3">@((string)TempData["Message"]!)</div>
+    <div class="alert alert-info mt-3">@TempData["Message"]</div>
 }
 
-<table class="table">
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Znaleziono: @bookCount @(bookCount == 1 ? "książka" : "książek")</h5>
+</div>
+
+<table class="table table-striped mb-5">
     <thead>
         <tr>
             <th>@Html.DisplayNameFor(model => model.tytul)</th>
@@ -87,7 +83,7 @@
             <th>Kategoria</th>
             <th>@Html.DisplayNameFor(model => model.tag)</th>
             <th>@Html.DisplayNameFor(model => model.stan)</th>
-            <th>Akcje</th>
+            <th style="width: 20%;">Akcje</th>
         </tr>
     </thead>
     <tbody>
@@ -100,41 +96,36 @@
                 <td>@(item.Kategoria?.Nazwa)</td>
                 <td>@Html.DisplayFor(modelItem => item.tag)</td>
                 <td>@Html.DisplayFor(modelItem => item.stan)</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Szczegóły</a>
-                    
-                    @* Przycisk Dodaj do Koszyka (dla USERÓW) *@
-                    @if (User.IsInRole("user") && item.stan == "Dostępna")
-                    {
-                        <form asp-action="AddToBasket" method="post" asp-route-id="@item.Id" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-success">
-                                Dodaj do Koszyka
-                            </button>
-                        </form>
-                    }
-                    
-                    @* Przycisk Rezerwuj (dla USERÓW) *@
-                    @if (User.IsInRole("user") && item.stan == "Wypożyczona")
-                    {
-                        <form asp-action="Reserve" method="post" asp-route-id="@item.Id" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-info">
-                                Zarezerwuj
-                            </button>
-                        </form>
-                    }
-                    
-                    @* Edycja i Usuwanie (dla worker/admin) *@
+                <td class="align-middle">
                     @if (User.IsInRole("worker") || User.IsInRole("admin"))
                     {
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Edytuj</a>
-                        
-                        <form asp-action="Delete" method="post" asp-route-id="@item.Id" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger" 
-                                    onclick="return confirm('Czy na pewno chcesz usunąć tę książkę: @item.tytul?');">
-                                Usuń
-                            </button>
-                        </form>
+                        <div class="row g-2 mb-2">
+                            <div class="col"><div class="d-grid"><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Edytuj</a></div></div>
+                            <div class="col">
+                                <form asp-action="Delete" method="post" asp-route-id="@item.Id" class="d-grid">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Czy na pewno chcesz usunąć tę książkę: @item.tytul?');">Usuń</button>
+                                </form>
+                            </div>
+                        </div>
                     }
+                    
+                    <div class="row g-2">
+                        <div class="col"><div class="d-grid"><a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Szczegóły</a></div></div>
+                        <div class="col">
+                            @if ((User.IsInRole("user") || User.IsInRole("admin")) && item.stan == "Dostępna")
+                            {
+                                <form asp-action="AddToBasket" method="post" asp-route-id="@item.Id" class="d-grid">
+                                    <button type="submit" class="btn btn-sm btn-success">Do koszyka</button>
+                                </form>
+                            }
+                            @if ((User.IsInRole("user") || User.IsInRole("admin")) && item.stan == "Wypożyczona")
+                            {
+                                <form asp-action="Reserve" method="post" asp-route-id="@item.Id" class="d-grid">
+                                    <button type="submit" class="btn btn-sm btn-info">Zarezerwuj</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
                 </td>
             </tr>
         }
